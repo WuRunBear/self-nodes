@@ -1,0 +1,191 @@
+地板:
+  地板: floor
+  木质地板: tile floor
+城市:
+  人群: crowd
+  城市: city
+  城市风景: cityscape
+  大街: avenue
+  大道: in main street
+  小巷: alley
+  市中心: downtown
+  栅栏: fence
+  栏杆: railing
+  电线杆和电线: power lines
+  自动贩卖机: vending machine
+  草坪: lawn
+  街道: street
+  路: road
+  路口: Intersection
+  路径: path
+  路标: road sign
+  路灯: lamppost
+  路障: traffic cone
+  路面: pavement
+  长凳: bench
+室内:
+  俱乐部: clubroom
+  医务室: infirmary
+  卧室: bedroom
+  厕所隔间: toilet stall
+  厨房: kitchen
+  地下室: basement
+  地库: dungeon
+  宅男房间: otaku room
+  室内: indoor
+  宿舍: dormitory
+  教室: classroom
+  服务器机房: server room
+  楼梯: stairs
+  浴室: bathing
+  温室: greenhouse
+  美术室: art room
+  自助餐厅: cafeteria
+  舞台: stage
+  配电房: electrical room
+室外:
+  东亚建物: east asian architecture
+  东亚建筑: east asian architecture
+  中式阁楼: chinese style loft
+  仓库: warehouse
+  传统中式客房: traditional chinese room
+  体育场: stadium
+  便利店: convenience store
+  保龄球馆: bowling alley
+  健身房: gym
+  公园: park
+  剧院: theater
+  动物园: zoo
+  博物馆: museum
+  古风建筑: chinese style architecture
+  台球桌: billiard
+  吊架；秋千: Trapeze
+  咖啡馆: cafe
+  哥特式建筑: gothic architecture
+  商店: shop
+  喷泉: fountain
+  图书馆: library
+  在电影院里: in the movie theatre
+  地牢: dungeon
+  坟墓: grave
+  城堡: castle
+  城市: city
+  城市风景: cityscape
+  塔: tower
+  塔楼: turret
+  墓地: graveyard
+  墓碑: tombstone
+  大教堂: cathedral
+  天文馆: planetarium
+  实验室: laboratory
+  寺庙: temple
+  居酒屋: izakaya
+  工业化古建筑: Industrial wind, Chinese architecture
+  工作坊: workshop
+  巨大的石头物体: monolith
+  巴士车站: bus stop
+  市场摊位: market stall
+  废墟: rubble ruins
+  建筑: magnificent architecture
+  建筑废墟: building ruins
+  拉平（悬挂）: rappelling
+  摔角场: wrestling ring
+  摩天楼: Skyscraper
+  摩天轮: ferris wheel
+  教堂: church
+  教室: classroom
+  旋转木马: carousel
+  日本旅馆: Japanese hotel
+  机场: airport
+  栏杆: handrail
+  树屋: treehouse
+  桥: bridge
+  桥下: under bridge
+  植物园: botanical garden
+  水上乐园: waterpark
+  水库: reservoir
+  水族馆: aquarium
+  法兰西: modern,Europe
+  法庭: courtroom
+  清真寺: mosque
+  港口: harbor
+  游乐园: amusement park
+  游乐场: playground
+  游泳池: swimming pool
+  火车站: train station
+  电影院: movie theater
+  电话亭: phone booth
+  监狱: prison
+  监狱酒吧: jail bars
+  礼堂: Auditorium
+  神社: gohei
+  竞技场: arena
+  繁华都市: Bustling city
+  美术馆: art gallery
+  舞台: stage
+  药店: pharmacy
+  街道: street
+  西罗马建筑: greco-roman architectur
+  贫民窟: shanty town/slum
+  赌场: casino
+  赛博朋克城市: cyberpunk city
+  超市: supermarket
+  路灯: street lamp
+  轮机舱: engine room
+  迪士尼乐园: Disney land
+  道路: road
+  酒吧: bar
+  铁路: railway
+  铁轨: railroad tracks
+  隧道: tunnel
+  霓虹灯: neon lights
+  面包店: bakery
+  音乐会: concert
+  饭店: restaurant
+  鸟居: torii
+家具:
+  办公椅: office chair
+  壁炉: fireplace
+  家具: bedroom
+  床: bed
+  扶手椅: armchair
+  折叠椅: folding chair
+  推拉门: sliding doors
+  桌子: table
+  椅子: chair
+  榻榻米: tatami
+  沙发: couch
+  沙滩椅: beach chair
+  空调: air conditioner
+  窗: window 
+  窗帘: curtains
+  窗扇: sash
+  衣架: clothes rack
+  被炉: kotatsu
+  课桌: school desk
+  躺椅: lounge chair
+  轮椅: wheelchair
+  门: door
+  隐形椅子: invisible chair
+床上用品:
+  Yes/No枕头: yes-no pillow
+  团子抱枕: dumpling Hug Pillow
+  地毯: carpet
+  坐垫: cushion
+  小熊: koakuma
+  床单: bed sheet
+  床垫；褥子: mattress
+  抱枕: pillow hug
+  日本床垫: futon
+  枕头: pillow
+  毛绒兔子: stuffed bunny
+  毛绒玩偶: stuffed animal
+浴室:
+  橡皮鸭: rubber duck
+  浴室: bathroom
+  浴缸: bathtub,
+  淋浴喷头: shower head
+  瓷砖: tiles
+  肥皂: soap
+  蹲便器: squat toilet
+  马桶: toilet

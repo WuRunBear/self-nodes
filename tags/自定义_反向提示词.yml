@@ -1,0 +1,55 @@
+Embeddings:
+  null: FastNegativeV2
+人:
+  丑陋: ugly
+  变异: mutation
+  变异的: mutated
+  变异的手: mutated hands
+  坏手: bad hands
+  坏脚: bad feet
+  坏身体: bad body
+  多人: Multiple people
+  多余的手臂: extra arms
+  多余的肢体: extra limb
+  多余的腿: extra legs
+  太多手指: too many fingers
+  斗鸡眼: cross-eyed
+  毁容: disfigured
+  漂浮的肢体: floating limbs
+  画的不好的手: poorly drawn hands
+  画的不好的脸: poorly drawn face
+  畸形: deformed
+  畸形的手: malformed hands
+  畸形的手和手指: mutated hands and fingers
+  畸形的肢体: malformed limbs
+  痤疮: acnes
+  皮肤斑点: skin spots
+  皮肤瑕疵: skin blemishes
+  移除年轻人: (AS-Adult-Neg:1.3)
+  移除成年人: (AS-YoungV2-Neg:1.3)
+  缺少手指: missing fingers
+  缺少肢体: missing limb
+  肢体不连贯: disconnected limbs
+  肥胖: (fat:1.2)
+  融合的手指: fused fingers
+  身体长: long body
+  长颈: long neck
+画面:
+  Not Safe For Work: NSFW
+  低分辨率: lowres
+  低质量: low quality
+  单色: monochrome
+  商标: logo
+  文字: text
+  最差质量: worstquality
+  模糊: blurry
+  正常质量: normal quality
+  水印: watermark
+  灰度: grayscale
+  用户名: username
+  签名: signature
+  素描: sketches
+  脱离焦点: out of focus
+  裁剪: cropped
+  错误的比例: bad proportions
+  错误的解剖: bad anatomy

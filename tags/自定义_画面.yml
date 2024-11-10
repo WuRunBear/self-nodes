@@ -1,0 +1,331 @@
+光照:
+  丁达尔效应: Tyndall effect
+  体积光: Volumetric Lighting
+  氛围光照: moody lighting
+  漏光光效: light leaks
+  电影级光照: Cinematic Lighting
+  背景光: background light
+  自然光: available light
+  轮廓光: rim light
+  透镜光晕: lens flare
+  金属光泽: metallic luster
+  霓虹灯: glowing neon lights
+写实:
+  写实: realistic
+  厚涂（风格）: highres
+  油画: oil painting
+  照片(拍立得): polaroid
+  照片（风格）: photo (medium)
+  真实: reality
+画笔:
+  丙烯漆料画: acrylic paint (medium)
+  传统画布（如纸等）: traditional media
+  圆珠笔: ballpoint pen (medium) 
+  彩色铅笔: colored pencil (medium)
+  柔和的色彩: pastel color
+  水彩: watercolor (medium)
+  石墨铅笔: graphite (medium)
+  签绘风格: faux traditional media
+  线条变粗: contour deepening
+  绘图笔: nib pen (medium)
+  铅笔速写: pencil sketch lines
+  马克笔: marker (medium)
+  马克笔（中性灰色）: copics
+画质:
+  低分辨率: lowres
+  单色图片: monochrome
+  壁纸: wallpaper
+  极高分辨率: incredibly absurdres
+  格子的: checkered
+  点阵图: pixel art
+  色彩斑斓的: colorful
+  超级高分辨率/大文件: huge filesize
+  超高分辨率: absurdres
+  高分辨率: highres
+素描:
+  剪影: silhouette
+  半色调: halftone
+  单色: monochrome
+  灰度: greyscale
+  素描: sketch
+  纯色: spot color
+  色块: flat color
+  色差、色失焦: chromatic aberration
+  轮廓加深: contour deepening
+  轮廓线: outline
+  部分着色: partially colored
+  高对比度: high contrast
+背景:
+  一部分画到了背景框外: outside border
+  作物顶部悬垂: crop top overhang
+  前景模糊: blurry foreground
+  双色调背景: two-tone background
+  回忆场景: flashback
+  圆斑背景: striped background
+  城市灯光背景: city lights
+  城市背景: cityscape
+  多彩的背景: multicolored background
+  套着画框(背景): windowboxed
+  幻想风格: fantasy
+  彩虹背景: rainbow background
+  抽象背景: abstract background
+  文字背景: wall of text
+  方格背景: checkered background
+  时钟背景: clock background
+  星空背景: starry background
+  景深(画法): depth of field
+  景观: landscape
+  柱状画布背景: pillarboxed
+  格子呢背景: plaid background
+  桃色背景: heart background
+  棕色背景: brown background
+  棕褐色背景: tan background
+  气泡背景: bubble background
+  渐变的背景: gradient background
+  灰色背景: grey background
+  白色背景: white background
+  相机取景框: viewfinder
+  科技幻想: ban
+  简单的背景: simple background
+  米色背景: beige background
+  网点图背景: halftone background
+  背景或画框是圆角: rounded corners
+  背景文字: background text
+  背景模糊: blurry
+  花卉图案装饰的背景: foral background
+  花朵点缀的背景: floral background
+  菱形背景: argyle background
+  蜂窝风格背景: honeycomb background
+  赛博朋克: cyberpunk
+  边框: border
+  透明背景: transparent background
+  闪着星光的背景: sparkle background
+  风景: scenery
+  黑色背景: black background
+艺术家风格:
+  穆夏风格: ((alphonse mucha))
+  莫奈风格: ((Monet style))
+艺术派系:
+  ASCII艺术: ((ASCII art))
+  古典主义: ((classicism))
+  抽象艺术: ((abstract art))
+  新艺术主义: ((art nouveau))
+  未来主义: ((futurism))
+  达达主义: ((Dadaism))
+艺术类型:
+  中国风: ((wash painting)),((ink s...))
+  像素画: pixel art
+  剪影: silhouette
+  单色图片: monochrome
+  彩色玻璃: Dalle de verre
+  彩铅画: (watercolor pencil)
+  手画草稿: sketch
+  拼贴艺术: Collage
+  插画: illustration
+  水墨画: Ink wash painting
+  水彩画: (((ink))), ((watercolor))
+  油画: ((dyeing)),((oil painting)),((impasto))
+  浮世绘: illustration,(((ukiyoe))),((sketch)),((japanese art))
+  瓷画: Encaustic painting
+  铅笔速写: (monochrome), (gray scale), (pencil sketch lines
+  铜版雕刻: Mezzotint
+  黑白草图: (posing sketch), (monochrome)
+艺术风格:
+  80动画: 1980s anime
+  80电影: 80s movie
+  8bit游戏: 8 Bit Game
+  GIF格式图片: animated gif
+  一列列小图组成大图: column lineup
+  一部作品中的主要人物集齐: everyone
+  万花筒摄影: Kaleidoscope Photography
+  专辑: album
+  专辑封面: album cover
+  亮的: light
+  传统媒体（手绘稿）: traditional media
+  侧面绘: profile
+  写实: realistic
+  剪影: silhouette
+  半身像: bust
+  原创: original
+  原画: artbook
+  原神冲击: genshin impact
+  吉卜力风格: Studio Ghibli
+  名画模仿: fine art parody
+  哥特摇滚: goth
+  四格: 4koma
+  图上有字样: sample
+  城市风景: cityscape
+  宝丽来艺术: Polaroid art
+  封面: cover
+  抱枕: dakimakura
+  拙劣的模仿: parody
+  拟人: personification
+  暗的: dark
+  杂志扫描: magazine scan
+  柴油朋克: ((dieselpunk))
+  梦幻: dreamlike
+  欧泊渲染: opal render
+  泡泡龙: bubble bobble
+  洛可可: (illustration),(paper figure),(lococo),((impasto)),(shiny skin)
+  渐变的背景: gradient background
+  游戏CG: game cg
+  漫画: comic
+  照片: photo
+  猎奇: guro
+  电锯人: chainsaw man
+  皮克斯动画: style of Pixar
+  真实: real
+  碧蓝航线: azur lane
+  科技幻想: science fiction
+  穿越: crossover
+  签绘风格: (faux traditional media)
+  简单的背景: simple background
+  素描: sketch
+  线条变粗: (lineart)
+  背影像: back
+  背景是前景的放大版: zoom layer
+  舰队收藏: kantai collection
+  色谱图: chemigram
+  蒸汽波: synthwave
+  表情绘（各种表情）: expressions
+  视觉错误: optical illusion
+  角色扮演: cosplay
+  边缘行者: rebecca (cyberpunk)
+  迪士尼电影: disney movie
+  透明水彩绘: watercolor (medium)
+  透明的背景: transparent background
+  风景: landscape/scenery
+  魔法旋涡: Magic Vortex
+颜色:
+  中兰花紫色: mediumorchid
+  中春绿色: springgreen
+  中海绿色: seagreen
+  中石板蓝色: mediumslateblue
+  中紫罗兰红色: mediumvioletred
+  中紫色: mediumpurple
+  中绿宝石色: mediumseagreen
+  中绿松石色: turquoise
+  中蓝色: mediumblue
+  亚麻色: linen
+  亮石板灰: lightslategray
+  亮金黄色: lightgoldenrodyellow
+  亮鲑鱼肉色: lightsalmon
+  兰花紫: orchid
+  军服蓝色: lightseagreen
+  午夜蓝: midnightblue
+  卡其色: khaki
+  印第安红色: indianred
+  古董白: antiquewhite
+  小麦色: wheat
+  巧克力色: chocolate
+  幽灵白: ghostwhite
+  庚氏灰色: gainsboro
+  暗兰花紫色: darkorchid
+  暗卡其色: darkkhaki
+  暗橙色: darkorange
+  暗洋红色: darkmagenta
+  暗海绿色: mediumaquamarine
+  暗灰蓝色: darkslateblue
+  暗紫罗兰色: darkviolet
+  暗红色: darkred
+  暗金菊色: darkgoldenrod
+  柠檬绸色: lemonchiffon
+  查特酒绿色: lawngreen
+  栗色: maroon
+  桃肉色: peachpuff
+  棕色: brown
+  棕褐色: tan
+  森林绿色: green
+  橄榄绿色: yellowgreen
+  橄榄色: olive
+  橄榄褐色: olivedrab
+  橙红色: orangered
+  橙色: orange
+  橙褐色: sandybrown
+  水鸭色: darkcyan
+  洋李色: plum
+  洋红色: magenta
+  浅棕色: light brown
+  浅海绿色: darkturquoise
+  浅灰色: lightgray
+  浅珊瑚色: lightcoral
+  浅粉色: lightpink
+  浅黄色: lightyellow
+  海军蓝: navy
+  海绿色: forestgreen
+  淡紫红色: lavenderblush
+  淡紫罗兰红色: palevioletred
+  淡绿色: palegreen
+  淡蓝色: lightblue
+  淡金菊色: palegoldenrod
+  淡钢蓝色: lightsteelblue
+  淡青色: paleturquoise
+  深天蓝: skyblue
+  深灰色: darkgray
+  深粉红色: crimson
+  深粉色: deeppink
+  深绿松石色: mediumturquoise
+  深绿色: darkslategray
+  深蓝色: darkblue
+  深青色: cadetblue
+  深鲑鱼肉色: darksalmon
+  漂白杏仁色: blanchedalmond
+  灰石色: slategray
+  灰色: gray
+  热粉红色: hotpink
+  玉米色: cornsilk
+  玫瑰棕色: rosybrown
+  珊瑚色: coral
+  琥珀色: burlywood
+  番木瓜色: papayawhip
+  番茄红: tomato
+  白烟色: whitesmoke
+  皇家蓝: royalblue
+  矢车菊蓝: cornflowerblue
+  石蓝色: slateblue
+  碧绿色: cyan
+  秘鲁色: peru
+  米色: beige
+  粉色: pink
+  粉蓝色: powderblue
+  紫红色: fuchsia
+  紫色: purple
+  红色: red
+  纳瓦霍白: navajowhite
+  绿松石色: darkseagreen
+  绿色: darkgreen
+  老花色: oldlace
+  耐火砖色: firebrick
+  艾莉丝蓝: aliceblue
+  花白色: floralwhite
+  草坪绿: mediumspringgreen
+  草绿色: lightgreen
+  蓝紫色: blueviolet
+  蓝色: blue
+  蓟色: thistle
+  蔚蓝色: azure
+  薄荷奶油色: mintcream
+  薄雾玫瑰: mistyrose
+  薰衣草色: lavender
+  蜜色: honeydew
+  象牙色: ivory
+  贝壳白: seashell
+  道奇蓝: dodgerblue
+  酸橙绿: lime
+  酸橙色: greenyellow
+  金色: gold
+  金菊色: goldenrod
+  金黄色的: blonde
+  钢蓝色: steelblue
+  银色: silver
+  雪白色: snow
+  青色: lightcyan
+  靛蓝色: indigo
+  饼干色: bisque
+  马鞍棕色: saddlebrown
+  鲑鱼肉色: salmon
+  鹿皮鞋色: moccasin
+  黄土赭色: sienna
+  黄绿色: chartreuse
+  黄色: yellow
+  黑色: black

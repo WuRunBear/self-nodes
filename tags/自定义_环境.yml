@@ -1,0 +1,181 @@
+云:
+  中积云: cumulus mediocris
+  乱卷云: cirrus intortus
+  乳状高层云: altostratus mammatus
+  卷云: cirrus
+  卷层云: Cirrostratus
+  卷层云类: cirrostratus
+  卷积云: Cirrocumulus
+  卷积云类: cirrocumulus
+  堡卷云: cirrus castellanus
+  堡状卷积云: cirrocumulus castellanus
+  堡状层积云: stratocumulus castellanus
+  堡状高积云: altocumulus castellanus
+  复合高层云: altostratus duplicates
+  密卷云: cirrus spissatus
+  层云: stratus
+  层状卷积云: cirrocumulus stratiformis
+  层状层积云: stratocumulus stratiformis
+  层状高积云: altocumulus strataformis
+  层积云: Stratocumulus
+  层积云类: stratocumulus
+  毛卷云: cirrus fibratus
+  毛卷层云: cirrostratus fibratus
+  波层云: stratus undulatus
+  波状高层云: altostratus undulatus
+  浓积云: cumulus congestus
+  淡积云: cumulus humilis
+  砧积雨云: cumulonimbus incus
+  破片高层云: altostratus pannus
+  碎层云: stratus fractus
+  碎积云: cumulus fractus
+  秃积雨云: cumulonimbus calvus
+  积云: cumulus
+  积雨云: Cumulonimbus
+  积雨云类: cumulonimbus
+  积雨性层积云: stratocumulus cumulogentis
+  絮卷云: cirrus floccus
+  絮状卷积云: cirrocumulus floccus
+  絮状层积云: stratocumulus lacunosus
+  絮状高积云: altocumulus floccus
+  网状卷积云: cirrocumulus lacunosus
+  网状高积云: altocumulus lacunosus
+  荚状层积云: stratocumulus lenticularis
+  荚状高积云: altocumulus lenticularis
+  蔽光高层云: altostratus opacus
+  辐状高层云: altostratus radiatus
+  透光高层云: altostratus translucidus
+  钩卷云: cirrus uncinus
+  雨层云: Nimbostratus
+  雾卷层云: cirrostratus nebulosus
+  雾层云: stratus nebulosus
+  高层云: Altostratus
+  高层云类: altostratus
+  高积云: Altocumulus
+  高积云类: altocumulus
+  鬃积雨云: cumulonimbus capillatus
+大自然:
+  冰川: glacier
+  大海: sea
+  大自然: nature
+  大草原: savanna
+  太空: space
+  室外: outdoors
+  山上: on a hill
+  山丘: hills
+  山脉: mountain
+  山顶: the top of the hill
+  峡谷: canyon
+  悬崖: cliff
+  星空: starry sky
+  树林: grove
+  梦幻之森(虚幻感.光粒子幽静): Dreamy forest
+  水中: underwater
+  沙漠: on a desert
+  河流: river
+  浮岛: floating island
+  海洋: ocean
+  海滩: on the beach
+  海边: over the sea
+  温泉: onsen
+  湖泊: lake
+  溪流: stream
+  瀑布: waterfall
+  火山: volcano
+  田园: field
+  稻田: rice paddy
+  竹林: bamboo forest
+  繁花草甸: flowers meadows
+  绿洲: oasis
+  花海: flower sea
+  花田: flower field
+  草地: in a meadow
+  荒地: wasteland
+  阿尔卑斯山脉: Alps
+  高原: plateau
+  麦田: wheat field
+天气:
+  下雨: rain
+  冰雪: snow,ice
+  多云: cloudy
+  夜晚: night
+  天空: sky
+  太阳: sun
+  宇宙: universe
+  彩虹: rainbow
+  日落: sunset
+  星星: stars
+  月亮: moon
+  流星雨: meteor shower
+  满月: full moon
+  白天: day
+  积雨云: cumulonimbus
+  闪电: lighting
+  雨天: rainy days
+  雪花: snowflakes
+  黄昏: dusk
+天空:
+  倾斜的天空: gradient sky
+  卫星: satellite
+  夜空: night sky
+  天空: sky
+  太空: space
+  宇宙: universe
+  新月: crescent moon
+  星星(天空中的): star (sky)
+  星星轨迹: star trail
+  星球: planet
+  星空: starry sky
+  月亮: moon
+  月光: moonlight
+  月牙: crescent
+  月的, 月球的;: lunar
+  满月: full moon
+  猩红月亮: scarlet moon
+  空间站: from space station
+  落日: sunset
+  超级银河: hyper galaxy
+季节:
+  冬天: in winter
+  夏天: in summer
+  春天: in spring
+  秋天: in autumn
+  秋景: (autumn maple forest:1.3),(very few fallen leaves),(path)
+氛围:
+  七夕节: tanabata
+  万圣节: halloween
+  中秋节: mid-autumn festival
+  傍晚背对阳光: against backlight at dusk
+  元宵节: lantern festival
+  兔年: year of the rabbit
+  圣诞节: christmas
+  夏日祭: summer festival
+  强边缘光: strong rim light
+  强阴影: intense shadows
+  彩色泡泡: (((colorful bubble)))
+  彩色玻璃: colourful glass
+  情人节: valentine
+  新年: new year
+  染色玻璃: stain glass
+  海边日落: in the ocean
+  涂鸦墙: Graffiti wall
+  液体背景: liquid background, Sputtered water
+  焰火: fireworks
+  爆炸: explosion
+  荧光蘑菇森林: fluorescent mushroom forests background
+  落地窗: ceiling window
+  蒸汽: water vapor
+  马赛克背景: mosaic background
+  魔法环: magic circles
+  黄金时段照明: golden hour lighting
+水:
+  大海: ocean
+  波浪: waves
+  海滩: beach
+  海藻: seaweed
+  海贝: seashell
+  涟漪: ripples
+  湖泊: lake
+  滴水: dripping
+  漩涡: swirl
+  瀑布: waterfall

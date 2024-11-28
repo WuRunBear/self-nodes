@@ -3,7 +3,10 @@ import os
 import csv
 import io
 import re
+import requests
+import hashlib
 import random
+import json
 import time
 
 class AnyType(str):

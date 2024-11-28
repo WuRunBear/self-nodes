@@ -3,6 +3,8 @@ import os
 import csv
 import io
 import re
+import random
+import time
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -410,7 +412,250 @@ class SelfNodes_SplitTagsRemoveDuplication:
 
         result = delimiter.join(unique_text)  # 转回字符串
         return (result, )
+#---------------------------------------------------------------------------------------------------------------------#
+class SelfNodes_PatternSearchReturn:
 
+    @ classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"multiline": True, "default": ""}),
+                "pattern": ("STRING", {"multiline": False, "default": ""}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("STRING", )
+    FUNCTION = "fun_text"
+    CATEGORY = "SelfNodes"
+
+    def fun_text(self, text, pattern=""):
+        match = re.search(pattern, text)
+        if match:
+            return (match.group(1), )
+        return ("", )
+
+class SelfNodes_randomReturnTags(object):
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
+                "input_text": ("STRING", {
+                    "multiline": True,
+                    "default": ""
+                }),
+                "delimiter": ("STRING", {
+                    "multiline": False,
+                    "default": ","
+                }),
+                "num_items": ("INT", {"default": 3, "min": 0, "max": 9999, "step": 1}),
+                "random_weight": ("BOOLEAN", {"default": True}),
+                "min_weight": ("FLOAT", {"default": 0.3, "step": 0.05}),
+                "max_weight": ("FLOAT", {"default": 1.3, "step": 0.05}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("tags",)
+
+    FUNCTION = "split_and_randomize"
+
+    CATEGORY = "SelfNodes"
+
+    def split_and_randomize(self, seed, input_text, delimiter, num_items, random_weight, min_weight, max_weight,):
+        items = input_text.split(delimiter)
+
+        random.seed(seed)
+
+        if num_items is None:
+            selected_items = random.sample(items, 3)
+        else:
+            if num_items > len(items):
+                selected_items = items
+            else:
+                selected_items = random.sample(items, num_items)
+
+        for i in range(len(selected_items)):
+            if random_weight:
+                weight = round(random.uniform(min_weight, max_weight), 2)  # 使用 min_weight 和 max_weight 限制权重范围
+                selected_items[i] = f"({selected_items[i]}:{weight})"
+
+        result_string = ','.join(selected_items)
+
+        return (result_string,)
+
+    # @classmethod
+    # def IS_CHANGED(self, input_text, num_items,):
+    #     if control_method == "random":
+    #         return time.time()
+    #     elif control_method == "fixed":
+    #         return self.randomN
+
+class SelfNodes_DisruptText:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+              "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
+              "string": ("STRING", {
+                  "multiline": True,
+                  "default": ""
+              }),
+              "delimiter": ("STRING", {
+                  "multiline": False,
+                  "default": ","
+              }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+
+    FUNCTION = "disrupt_text"
+
+    CATEGORY = "SelfNodes"
+
+    def disrupt_text(self, seed, string, delimiter):
+      # 使用指定的分隔符分割字符串
+      parts = string.split(delimiter)
+      
+      random.seed(seed)
+
+      # 打乱分割后的子字符串顺序
+      random.shuffle(parts)
+
+      # 组合打乱后的子字符串为新的字符串
+      shuffled_string = delimiter.join(parts)
+
+      shuffled_string = shuffled_string+','
+
+      return (shuffled_string,)
+
+
+class SelfNodes_BaiduTranslate:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "input_text": ("STRING", {
+                    "multiline": True,
+                    "default": ""
+                }),
+                "from_lang": ("STRING", {
+                    "default": "auto"
+                }),
+                "to_lang": ("STRING", {
+                    "default": "en"
+                }),
+                "app_id": ("STRING", {
+                    "default": ""
+                }),
+                "app_key": ("STRING", {
+                    "default": ""
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+
+    FUNCTION = "translate"
+
+    CATEGORY = "SelfNodes"
+
+    def translate(self, input_text, from_lang, to_lang, app_id, app_key):
+        if not input_text:
+            return ("",)
+
+        # 需要等待一秒,不然多个节点可能会出现频繁请求被拒绝的情况
+        time.sleep(1)
+
+        api_url = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+        
+        salt = str(random.randint(32768, 65536))
+        sign = hashlib.md5((app_id + input_text + salt + app_key).encode()).hexdigest()
+        
+        params = {
+            "q": input_text,
+            "from": from_lang,
+            "to": to_lang,
+            "appid": app_id,
+            "salt": salt,
+            "sign": sign
+        }
+        print("翻译参数：")
+        print({
+            "q": input_text,
+            "from": from_lang,
+            "to": to_lang,
+            "appid": app_id,
+            "salt": salt,
+            "sign": sign
+        })
+        response = requests.get(api_url, params=params)
+        print(response.text)
+        response_json = json.loads(response.text)
+        translation_list = [result["dst"] for result in response_json["trans_result"]]
+        translation = "\n".join(translation_list).lower()
+        
+        print("翻译结果：")
+        print(translation)
+        return (translation,)
+
+
+class SelfNodes_StringToDTGParams(object):
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "input_text": ("STRING", {
+                    "multiline": True,
+                    "default": "<艺术家列表>: \n<人物特征>: \n<特殊标签>: \n<生成>: "
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING","STRING","STRING","STRING",)
+    RETURN_NAMES = ("artist", "characters", "special_tags", "general")
+
+    FUNCTION = "splitString"
+
+    CATEGORY = "SelfNodes"
+
+    def splitString(self, input_text):
+        # Generate a random integer of arbitrary length
+        matches = re.split(r'(<[^>]*>):', input_text)
+        print(matches)
+        # 初始化一个空字典
+        result_dict = {}
+
+        # \((?:[^()\\]*|\\.)*:\d+(\.\d+)?\)
+        # 遍历列表并按模式分组
+        i = 0
+        while i < len(matches):
+            if re.match(r'<.*?>', matches[i]):  # 如果当前项是尖括号内容
+                key = matches[i][1:-1]  # 去掉尖括号
+                value_parts = []
+                i += 1
+                while i < len(matches) and not re.match(r'<.*?>', matches[i]):
+                    value_parts.append(matches[i])
+                    i += 1
+                result_dict[key] = ' '.join(value_parts)  # 将值合并成一个字符串
+            else:
+                i += 1
+
+        return (result_dict["艺术家列表"], result_dict["人物特征"], result_dict["特殊标签"], result_dict["生成"],)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # MAPPINGS
@@ -430,6 +675,11 @@ NODE_CLASS_MAPPINGS = {
     "SelfNodes Save Text To File": SelfNodes_SaveTextToFile,
     "SelfNodes Split Tags Insert Text": SelfNodes_SplitTagsInsertText,
     "SelfNodes Split Tags Remove Duplication": SelfNodes_SplitTagsRemoveDuplication,
+    "SelfNodes Pattern Search Return": SelfNodes_PatternSearchReturn,
+    "随机返回tags": SelfNodes_randomReturnTags,
+    "打乱文本": SelfNodes_DisruptText,
+    "百度翻译": SelfNodes_BaiduTranslate,
+    "转成DTG参数": SelfNodes_StringToDTGParams
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -445,4 +695,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SelfNodes Save Text To File": "将文本保存到文件",
     "SelfNodes Split Tags Insert Text": "分割标签并插入文本",
     "SelfNodes Split Tags Remove Duplication": "分割标签并去重",
+    "SelfNodes Pattern Search Return": "正则匹配内容输出",
+    "随机返回tags": "随机返回tags",
+    "打乱文本": "打乱文本",
+    "百度翻译": "百度翻译",
+    "转成DTG参数": "转成DTG参数"
 }

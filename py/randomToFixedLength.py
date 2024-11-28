@@ -6,17 +6,18 @@ import time
 
 class randomToFixedLength:
     def __init__(self):
-        self.randomN=None
+        # self.randomN=None
         pass
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
+              "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
               "min_length": ("INT", {"default": 1, "min": 0, "max": 9999, "step": 1}),
               "max_length": ("INT", {"default": 1, "min": 0, "max": 9999, "step": 1}),
               "multiple": ("INT", {"default": 32, "min": 1, "max": 9999, "step": 1}),
-              "control_method": (["random", "fixed"],),
+              # "control_method": (["random", "fixed"],),
             },
         }
 
@@ -26,25 +27,23 @@ class randomToFixedLength:
 
     CATEGORY = "SelfNodes"
 
-    def random_to_fixed_length(self, min_length, max_length, multiple, control_method):
+    def random_to_fixed_length(self, seed, min_length, max_length, multiple, ):
         # 找到范围内的最小倍数
         min_multiple = (min_length + multiple - 1) // multiple * multiple
         if min_multiple > max_length:
             raise ValueError("指定的范围内没有符合条件的倍数")
         # 在范围内随机选择一个倍数
 
-        # 等待0.3秒，以避免多个节点同时生成相同的随机数
-        time.sleep(0.3)
-        random.seed(time.time())  # 设置种子为当前时间
-        self.randomN = random.randrange(min_multiple, max_length + 1, multiple)
-        return (self.randomN, )
+        random.seed(seed)
+        # self.randomN = random.randrange(min_multiple, max_length + 1, multiple)
+        return (random.randrange(min_multiple, max_length + 1, multiple), )
 
-    @classmethod
-    def IS_CHANGED(self, min_length, max_length, multiple, control_method):
-        if control_method == "random":
-            return time.time()
-        elif control_method == "fixed":
-            return self.randomN
+    # @classmethod
+    # def IS_CHANGED(self, min_length, max_length, multiple, control_method):
+    #     if control_method == "random":
+    #         return time.time()
+    #     elif control_method == "fixed":
+    #         return self.randomN
 
 # 限制比例大小
 class LimitRatioSize:

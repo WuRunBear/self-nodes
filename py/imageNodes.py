@@ -1,5 +1,5 @@
 import folder_paths
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw, ImageFont
 from PIL.PngImagePlugin import PngInfo
 from PIL.ExifTags import TAGS, GPSTAGS
 import numpy as np
@@ -7,7 +7,12 @@ import os
 import json
 import io
 from comfy.cli_args import args
+import torch
+from torchvision import transforms
 
+def pil2tensor(image):
+    return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0) 
+    
 class SaveImageNotPreview(object):
     def __init__(self):
         self.output_dir = folder_paths.get_output_directory()
@@ -194,14 +199,138 @@ class SaveImageWEBP(object):
 
         return {"result": (filename_with_batch_num, ), "ui": { "images": results } }
 
+class TextImg(object):
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        font_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "fonts")
+        file_list = [f for f in os.listdir(font_dir) if os.path.isfile(os.path.join(font_dir, f)) and f.lower().endswith(".ttf")]
+
+        return {
+            "required": {
+                # "width": ("INT", {"default": 1024, "min": 64, "max": 2048}),
+                # "height": ("INT", {"default": 1024, "min": 64, "max": 2048}),
+                "images": ("IMAGE", ),
+                "text": ("STRING", {"multiline": False, "default": ""}),
+                "position": (["top", "bottom", "left", "right"],  {"default": "top"}),
+                "font_name": (file_list,),
+            },
+        }
+
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "save_images"
+
+    OUTPUT_NODE = True
+
+    CATEGORY = "SelfNodes"
+
+    def save_images(self, images, text, position, font_name,):
+        def create_text_image(text, font_path, font_size, width, height, position='bottom'):
+            # 创建一个字体对象
+            font = ImageFont.truetype(font_path, font_size)
+
+            # 使用 ImageDraw 计算文本的边界框
+            dummy_image = Image.new('RGB', (1, 1))  # 创建一个最小的图像用于计算文本大小
+            draw = ImageDraw.Draw(dummy_image)
+            bbox = draw.textbbox((0, 0), text, font=font)  # 获取文本的边界框
+            text_width, text_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+            # text_width = width
+            # text_height = height
+            if position=="top" or position=="bottom":
+                text_width = width
+                text_height = 100
+        
+            if position=="left" or position=="right":
+                text_width = 100
+                text_height = height
+        
+            print(f"{width}： {height}")
+            print(f"{text_width}： {text_height}")
+            # 创建合适大小的图像并绘制文本
+            text_image = Image.new('RGB', (text_width, text_height), (255, 255, 255))  # 创建一个背景为白色的图片
+            draw = ImageDraw.Draw(text_image)
+
+            # 在图片上居中绘制文本
+            text_position = ((text_width - text_width) // 2, (text_height - text_height) // 2)
+            draw.text(text_position, text, font=font, fill=(0, 0, 0))  # 绘制文本，颜色为黑色
+
+            return text_image
+        
+        def concatenate_images(base_image, text_image, position='bottom'):
+            # if position == 'right':
+            #   new_image = torch.cat((text_image, base_image), dim=2)
+            # elif position == 'bottom':
+            #   new_image = torch.cat((text_image, base_image), dim=1)
+            # elif position == 'left':
+            #   new_image = torch.cat((base_image, text_image), dim=2)
+            # elif position == 'top':
+            #   new_image = torch.cat((base_image, text_image), dim=1)
+
+            # 获取拼接后图像的尺寸
+            base_width, base_height = base_image.size
+            text_width, text_height = text_image.size
+            
+            if position == 'bottom':
+                # 拼接在底部
+                new_image = Image.new('RGB', (base_width, base_height + text_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0))
+                new_image.paste(text_image, (0, base_height))
+            elif position == 'top':
+                # 拼接在顶部
+                new_image = Image.new('RGB', (base_width, base_height + text_height), (255, 255, 255))
+                new_image.paste(text_image, (0, 0))
+                new_image.paste(base_image, (0, text_height))
+            elif position == 'right':
+                # 拼接在右侧
+                new_image = Image.new('RGB', (base_width + text_width, base_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0))
+                new_image.paste(text_image, (base_width, 0))
+            elif position == 'left':
+                # 拼接在左侧
+                new_image = Image.new('RGB', (base_width + text_width, base_height), (255, 255, 255))
+                new_image.paste(text_image, (0, 0))
+                new_image.paste(base_image, (text_width, 0))
+            
+            return new_image
+
+        # Define font settings
+        font_folder = "fonts"
+        font_file = os.path.join(font_folder, font_name)
+        resolved_font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), font_file)
+        font_size = 40
+
+        # text_image = create_text_image(text, resolved_font_path, font_size, width=width, height=height, position=position)
+        # transform = transforms.ToTensor()
+        # # 转换图片为Tensor
+        # tensor_image = transform(text_image)
+
+        result_image = []
+        for batch_number, image in enumerate(images):
+            i = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+
+            print(image.shape)
+            # 创建文字图片
+            text_image = create_text_image(text, resolved_font_path, font_size, width=image.shape[1], height=image.shape[0], position=position)
+
+            # 拼接文字图片到目标图片的底部
+            result_image.append(pil2tensor(concatenate_images(img, text_image, position=position)))
+
+        return  (torch.cat(result_image, dim=0), )
+
+
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,
     "保存图片WEBP": SaveImageWEBP,
     "保存图片不预览": SaveImageNotPreview,
+    "合并文字图片": TextImg,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "保存图片JPG": "保存图片JPG",
     "保存图片WEBP": "保存图片WEBP",
     "保存图片不预览": "保存图片不预览",
+    "合并文字图片": "合并文字图片",
 }

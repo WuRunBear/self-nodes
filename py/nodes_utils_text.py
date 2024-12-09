@@ -482,9 +482,11 @@ class SelfNodes_randomReturnTags(object):
             else:
                 selected_items = random.sample(items, num_items)
 
+        weight = 1
         for i in range(len(selected_items)):
             if random_weight:
-                weight = round(random.uniform(min_weight, max_weight), 2)  # 使用 min_weight 和 max_weight 限制权重范围
+                if round(random.uniform(1,num_items)) != round(num_items/2):
+                    weight = round(random.uniform(min_weight, max_weight), 2)  # 使用 min_weight 和 max_weight 限制权重范围
                 selected_items[i] = f"({selected_items[i]}:{weight})"
 
         result_string = ','.join(selected_items)

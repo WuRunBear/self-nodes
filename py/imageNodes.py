@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 import pytorch_lightning as pl
+import clip
 
 def pil2tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0) 
@@ -325,42 +326,36 @@ class TextImg(object):
 folder_paths.folder_names_and_paths["aesthetic"] = ([os.path.join(folder_paths.models_dir,"aesthetic")], folder_paths.supported_pt_extensions)
 
 class MLP(pl.LightningModule):
-    def __init__(self, input_size, xcol='emb', ycol='avg_rating'):
+    def __init__(self, input_size, xcol='emb', ycol='avg_rating', batch_norm=True):
         super().__init__()
         self.input_size = input_size
         self.xcol = xcol
         self.ycol = ycol
         self.layers = nn.Sequential(
-            nn.Linear(self.input_size, 1024),
-            #nn.ReLU(),
+            nn.Linear(self.input_size, 2048),
+            nn.ReLU(),
+            nn.BatchNorm1d(2048) if batch_norm else nn.Identity(),
+            nn.Dropout(0.3),
+            nn.Linear(2048, 512),
+            nn.ReLU(),
+            nn.BatchNorm1d(512) if batch_norm else nn.Identity(),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.BatchNorm1d(256) if batch_norm else nn.Identity(),
             nn.Dropout(0.2),
-            nn.Linear(1024, 128),
-            #nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(128, 64),
-            #nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128) if batch_norm else nn.Identity(),
             nn.Dropout(0.1),
-            nn.Linear(64, 16),
-            #nn.ReLU(),
-            nn.Linear(16, 1)
+            nn.Linear(128, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
         )
+
     def forward(self, x):
         return self.layers(x)
-    def training_step(self, batch, batch_idx):
-            x = batch[self.xcol]
-            y = batch[self.ycol].reshape(-1, 1)
-            x_hat = self.layers(x)
-            loss = F.mse_loss(x_hat, y)
-            return loss
-    def validation_step(self, batch, batch_idx):
-        x = batch[self.xcol]
-        y = batch[self.ycol].reshape(-1, 1)
-        x_hat = self.layers(x)
-        loss = F.mse_loss(x_hat, y)
-        return loss
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
+
 def normalized(a, axis=-1, order=2):
     import numpy as np  # pylint: disable=import-outside-toplevel
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
@@ -369,6 +364,9 @@ def normalized(a, axis=-1, order=2):
 
 class ImageScorer:
     def __init__(self):
+        self.model = None
+        self.model2 = None
+        self.preprocess = None
         pass
 
     @classmethod
@@ -391,22 +389,23 @@ class ImageScorer:
     def calc_score(self, model_name, image, device):
         m_path = folder_paths.folder_names_and_paths["aesthetic"][0]
         m_path2 = os.path.join(m_path[0], model_name)
-        model = MLP(768)  # CLIP embedding dim is 768 for CLIP ViT L 14
-        s = torch.load(m_path2)
-        model.load_state_dict(s)
-        model.to(device)
-        model.eval()
-        model2, preprocess = clip.load("ViT-L/14", device=device)  # RN50x64
+        if self.model is None:
+            self.model = MLP(768)  # CLIP embedding dim is 768 for CLIP ViT L 14
+            s = torch.load(m_path2)
+            self.model.load_state_dict(s)
+            self.model.to(device)
+            self.model.eval()
+        if self.model2 is None:
+            self.model2, self.preprocess = clip.load("ViT-L/14", device=device)  # RN50x64
         tensor_image = image[0]
         img = (tensor_image * 255).to(torch.uint8).numpy()
         pil_image = Image.fromarray(img, mode='RGB')
-        image2 = preprocess(pil_image).unsqueeze(0).to(device)
+        image2 = self.preprocess(pil_image).unsqueeze(0).to(device)
         with torch.no_grad():
-            image_features = model2.encode_image(image2)
+            image_features = self.model2.encode_image(image2)
         im_emb_arr = normalized(image_features.cpu().detach().numpy())
-        prediction = model(torch.from_numpy(im_emb_arr).to(device).type(torch.cuda.FloatTensor))
+        prediction = self.model(torch.from_numpy(im_emb_arr).to(device).type(torch.cuda.FloatTensor))
         final_prediction = round(float(prediction[0]), 2)
-        del model
         return (final_prediction,final_prediction,str(final_prediction),)
         
 

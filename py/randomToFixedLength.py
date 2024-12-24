@@ -57,6 +57,7 @@ class LimitRatioSize:
               "widht": ("INT", {"default": 1, "min": 0, "max": 9999, "step": 1}),
               "height": ("INT", {"default": 1, "min": 0, "max": 9999, "step": 1}),
               "min_length": ("INT", {"default": 1024, "min": 1, "max": 9999, "step": 1}),
+              "max_length": ("INT", {"default": 1024, "min": 1, "max": 9999, "step": 1}),
               "multiple": ("INT", {"default": 32, "min": 1, "max": 9999, "step": 1}),
             },
         }
@@ -68,21 +69,30 @@ class LimitRatioSize:
 
     CATEGORY = "SelfNodes"
 
-    def limit_ratio_size(self, widht, height, min_length, multiple):
-        if  max(widht, height) < min_length:
-            # 找到比例因子
+    def limit_ratio_size(self, widht, height, min_length, max_length, multiple):
+        # 计算比例因子以确保宽高满足 min_length
+        if max(widht, height) < min_length:
             scale_factor = min_length / max(widht, height)
-            # 等比例放大并取整
             widht_scaled = int(widht * scale_factor)
             height_scaled = int(height * scale_factor)
+        else:
+            widht_scaled, height_scaled = widht, height
 
-            # 确保结果是multiple的倍数
+        # 确保宽高是 multiple 的倍数
+        widht_scaled = (widht_scaled // multiple) * multiple
+        height_scaled = (height_scaled // multiple) * multiple
+
+        # 如果计算后的尺寸大于 max_length，进行缩小
+        if max(widht_scaled, height_scaled) > max_length:
+            scale_factor = max_length / max(widht_scaled, height_scaled)
+            widht_scaled = int(widht_scaled * scale_factor)
+            height_scaled = int(height_scaled * scale_factor)
+
+            # 再次调整为 multiple 的倍数
             widht_scaled = (widht_scaled // multiple) * multiple
             height_scaled = (height_scaled // multiple) * multiple
 
-            return (widht_scaled, height_scaled, )
-        else:
-            return (widht, height, )  # 如果不满足条件，则返回原数
+        return (widht_scaled, height_scaled,)
 
 NODE_CLASS_MAPPINGS = {
     "范围随机整数": randomToFixedLength,

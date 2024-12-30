@@ -382,7 +382,7 @@ class ImageScorer:
             }
         }
 
-    RETURN_TYPES = ("NUMBER", "FLOAT", "STRING", "IMAGE")
+    RETURN_TYPES = ("NUMBER", "FLOAT", "STRING", "IMAGE",)
     FUNCTION = "calc_score"
     CATEGORY = "SelfNodes"
 
@@ -406,7 +406,7 @@ class ImageScorer:
         im_emb_arr = normalized(image_features.cpu().detach().numpy())
         prediction = self.model(torch.from_numpy(im_emb_arr).to(device).type(torch.cuda.FloatTensor))
         final_prediction = round(float(prediction[0]), 2)
-        return (final_prediction,final_prediction,str(final_prediction), image)
+        return (final_prediction,final_prediction,str(final_prediction), image,)
 
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,

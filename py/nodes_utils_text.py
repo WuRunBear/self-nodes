@@ -482,7 +482,7 @@ class SelfNodes_randomReturnTags(object):
             else:
                 selected_items = random.sample(items, num_items)
 
-        weight = 1
+        weight = round(random.uniform(min_weight, max_weight), 2)
         for i in range(len(selected_items)):
             if random_weight:
                 if round(random.uniform(1,num_items)) != round(num_items/2):

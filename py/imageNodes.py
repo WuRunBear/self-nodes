@@ -382,7 +382,7 @@ class ImageScorer:
             }
         }
 
-    RETURN_TYPES = ("NUMBER", "FLOAT", "STRING", "IMAGE",)
+    RETURN_TYPES = ("NUMBER","FLOAT","STRING")
     FUNCTION = "calc_score"
     CATEGORY = "SelfNodes"
 
@@ -391,7 +391,7 @@ class ImageScorer:
         m_path2 = os.path.join(m_path[0], model_name)
         if self.model is None:
             self.model = MLP(768)  # CLIP embedding dim is 768 for CLIP ViT L 14
-            s = torch.load(m_path2, weights_only=True)
+            s = torch.load(m_path2, weights_only=False)
             self.model.load_state_dict(s)
             self.model.to(device)
             self.model.eval()
@@ -406,7 +406,8 @@ class ImageScorer:
         im_emb_arr = normalized(image_features.cpu().detach().numpy())
         prediction = self.model(torch.from_numpy(im_emb_arr).to(device).type(torch.cuda.FloatTensor))
         final_prediction = round(float(prediction[0]), 2)
-        return (final_prediction,final_prediction,str(final_prediction), image,)
+        return (final_prediction,final_prediction,str(final_prediction),)
+        
 
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,

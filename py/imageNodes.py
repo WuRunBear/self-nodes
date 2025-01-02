@@ -5,13 +5,22 @@ from PIL.ExifTags import TAGS, GPSTAGS
 import numpy as np
 import os
 import json
-import io
+from io import BytesIO
 from comfy.cli_args import args
 import torch
 import torch.nn as nn
 from torchvision import transforms
 import pytorch_lightning as pl
 import clip
+import requests
+
+class AnyType(str):
+    """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
+
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+any_type = AnyType("*")
 
 def pil2tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0) 
@@ -407,7 +416,84 @@ class ImageScorer:
         prediction = self.model(torch.from_numpy(im_emb_arr).to(device).type(torch.cuda.FloatTensor))
         final_prediction = round(float(prediction[0]), 2)
         return (final_prediction,final_prediction,str(final_prediction),)
-        
+
+
+def load_image_and_mask_from_url(url, timeout=10):
+    # Load the image from the URL
+    response = requests.get(url, timeout=timeout)
+
+    content_type = response.headers.get('Content-Type')
+    
+    image = Image.open(BytesIO(response.content))
+
+    # Create a mask from the image's alpha channel
+    mask = image.convert('RGBA').split()[-1]
+
+    # Convert the mask to a black and white image
+    mask = mask.convert('L')
+
+    image=image.convert('RGB')
+
+    return (image, mask)
+
+class LoadImagesFromURL:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "url": ("STRING",{"multiline": True,"default": "https://","dynamicPrompts": False}),
+                             },
+                "optional":{
+                    "seed": (any_type,  {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                }
+                }
+    
+    RETURN_TYPES = ("IMAGE","MASK",)
+    RETURN_NAMES = ("images","masks",)
+
+    FUNCTION = "run"
+
+    CATEGORY = "SelfNodes"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (True,True,)
+
+
+    global urls_image
+    urls_image={}
+
+    def run(self,url,seed=0):
+        global urls_image
+        # print(urls_image)
+        def filter_http_urls(urls):
+            filtered_urls = []
+            for url in urls.split('\n'):
+                if url.startswith('http'):
+                    filtered_urls.append(url)
+            return filtered_urls
+
+        filtered_urls = filter_http_urls(url)
+
+        images=[]
+        masks=[]
+
+        for img_url in filtered_urls:
+            try:
+                if img_url in urls_image:
+                    img,mask=urls_image[img_url]
+                else:
+                    img,mask=load_image_and_mask_from_url(img_url)
+                    urls_image[img_url]=(img,mask)
+
+                img1=pil2tensor(img)
+                mask1=pil2tensor(mask)
+
+                images.append(img1)
+                masks.append(mask1)
+            except Exception as e:
+                print("发生了一个未知的错误：", str(e))
+
+        return (images,masks,)
+
 
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,
@@ -415,6 +501,7 @@ NODE_CLASS_MAPPINGS = {
     "保存图片不预览": SaveImageNotPreview,
     "合并文字图片": TextImg,
     "图片美学评分": ImageScorer,
+    "从URL加载图片": LoadImagesFromURL,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -423,4 +510,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "保存图片不预览": "保存图片不预览",
     "合并文字图片": "合并文字图片",
     "图片美学评分": "图片美学评分",
+    "从URL加载图片": "从URL加载图片",
 }

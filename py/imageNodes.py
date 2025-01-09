@@ -13,6 +13,7 @@ from torchvision import transforms
 import pytorch_lightning as pl
 import clip
 import requests
+import random
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -50,7 +51,7 @@ class SaveImageNotPreview(object):
 
     OUTPUT_NODE = True
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     def save_images(self, images, filename_full="", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
@@ -109,7 +110,7 @@ class SaveImageJPG(object):
 
     OUTPUT_NODE = True
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
@@ -173,7 +174,7 @@ class SaveImageWEBP(object):
 
     OUTPUT_NODE = True
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     def save_images(self, images, filename_full="", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
@@ -235,7 +236,7 @@ class TextImg(object):
 
     OUTPUT_NODE = True
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     def save_images(self, images, text, position, font_name,):
         def create_text_image(text, font_path, font_size, width, height, position='bottom'):
@@ -393,7 +394,7 @@ class ImageScorer:
 
     RETURN_TYPES = ("NUMBER","FLOAT","STRING")
     FUNCTION = "calc_score"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     def calc_score(self, model_name, image, device):
         m_path = folder_paths.folder_names_and_paths["aesthetic"][0]
@@ -452,7 +453,7 @@ class LoadImagesFromURL:
 
     FUNCTION = "run"
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/图片"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (True,True,)
@@ -494,6 +495,111 @@ class LoadImagesFromURL:
 
         return (images,masks,)
 
+class SelfNodes_LoadImagesDIr(object):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
+                "directory": ("STRING", {"default": ""}),
+            },
+            "optional": {
+                "load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "start_index": ("INT", {"default": -1, "min": -1, "step": 1}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK", "INT")
+
+    FUNCTION = "load_images"
+
+    CATEGORY = "SelfNodes/图片"
+
+    def load_images(self, seed, directory: str, load_cap: int = -1, start_index: int = 0):
+        if not os.path.isdir(directory):
+            raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
+        dir_files = os.listdir(directory)
+        if len(dir_files) == 0:
+            raise FileNotFoundError(f"No files in directory '{directory}'.")
+
+        random.seed(seed)
+
+        # Filter files by extension
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+
+        dir_files = sorted(dir_files)
+        dir_files = [os.path.join(directory, x) for x in dir_files]
+
+        print(len(dir_files))
+        # start at start_index
+        if start_index>=0 and dir_files[start_index:]:
+            dir_files = dir_files[start_index:]
+        else:
+            dir_files = dir_files[random.randint(0, len(dir_files)-1):]
+
+        images = []
+        masks = []
+
+
+        limit_images = False
+        if load_cap > 0:
+            limit_images = True
+        image_count = 0
+
+        has_non_empty_mask = False
+
+        for image_path in dir_files:
+            if os.path.isdir(image_path):
+                continue
+            if limit_images and image_count >= load_cap:
+                break
+            i = Image.open(image_path)
+            i = ImageOps.exif_transpose(i)
+            image = i.convert("RGB")
+            image = np.array(image).astype(np.float32) / 255.0
+            image = torch.from_numpy(image)[None,]
+            if 'A' in i.getbands():
+                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                mask = 1. - torch.from_numpy(mask)
+                has_non_empty_mask = True
+            else:
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            images.append(image)
+            masks.append(mask)
+            image_count += 1
+
+        if len(images) == 1:
+            return (images[0], masks[0], 1)
+
+        elif len(images) > 1:
+            image1 = images[0]
+            mask1 = None
+
+            for image2 in images[1:]:
+                if image1.shape[1:] != image2.shape[1:]:
+                    image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
+                image1 = torch.cat((image1, image2), dim=0)
+
+            for mask2 in masks:
+                if has_non_empty_mask:
+                    if image1.shape[1:3] != mask2.shape:
+                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[1], image1.shape[2]), mode='bilinear', align_corners=False)
+                        mask2 = mask2.squeeze(0)
+                    else:
+                        mask2 = mask2.unsqueeze(0)
+                else:
+                    mask2 = mask2.unsqueeze(0)
+
+                if mask1 is None:
+                    mask1 = mask2
+                else:
+                    mask1 = torch.cat((mask1, mask2), dim=0)
+
+            return (image1, mask1, len(images))
 
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,
@@ -502,6 +608,7 @@ NODE_CLASS_MAPPINGS = {
     "合并文字图片": TextImg,
     "图片美学评分": ImageScorer,
     "从URL加载图片": LoadImagesFromURL,
+    "文件夹加载图片": SelfNodes_LoadImagesDIr,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -511,4 +618,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "合并文字图片": "合并文字图片",
     "图片美学评分": "图片美学评分",
     "从URL加载图片": "从URL加载图片",
+    "文件夹加载图片": "文件夹加载图片",
 }

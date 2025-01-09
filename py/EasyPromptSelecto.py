@@ -100,7 +100,7 @@ class EasyPromptSelecto:
 
     #OUTPUT_NODE = False
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/工具"
 
     def translate(self,prompt_type,unique_id,wprompt,text=''):
         values = ''

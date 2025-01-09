@@ -54,7 +54,7 @@ class SelfNodes_SplitString:
     RETURN_TYPES = (any_type, any_type, any_type, any_type, "STRING", )
     RETURN_NAMES = ("string_1", "string_2", "string_3", "string_4", )    
     FUNCTION = "split"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def split(self, text, delimiter=""):
 
@@ -79,7 +79,7 @@ class SelfNodes_Text:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("text", )
     FUNCTION = "text_multiline"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def text_multiline(self, text):
             
@@ -104,7 +104,7 @@ class SelfNodes_MultilineText:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("multiline_text", )
     FUNCTION = "text_multiline"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def text_multiline(self, text, chars_to_remove, split_string=False, remove_chars=False, convert_from_csv=False, csv_quote_char="'"):
     
@@ -171,7 +171,7 @@ class SelfNodes_SaveTextToFile:
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = () 
     FUNCTION = 'save_list'
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
     OUTPUT_NODE = True
 
     def save_list(self, **kwargs):
@@ -205,7 +205,7 @@ class SelfNodes_TextConcatenate:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("STRING",)
     FUNCTION = "concat_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def concat_text(self, text1="", text2="", separator=""):
     
@@ -233,7 +233,7 @@ class SelfNodes_TextReplace:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "replace_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def replace_text(self, text, find1="", replace1="", find2="", replace2="", find3="", replace3=""):
     
@@ -261,7 +261,7 @@ class SelfNodes_TextBlacklist:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "replace_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def replace_text(self, text, blacklist_words, replacement_text=""):
         text_out = text 
@@ -292,7 +292,7 @@ class SelfNodes_TextOperation:
     RETURN_TYPES = (any_type, "STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "text_operation"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def text_operation(self, text, operation):
     
@@ -330,7 +330,7 @@ class SelfNodes_TextLength:
     RETURN_TYPES = ("INT", "STRING", )
     RETURN_NAMES = ("INT", )
     FUNCTION = "len_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def len_text(self, text):
     
@@ -355,7 +355,7 @@ class SelfNodes_SplitTagsInsertText:
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "fun_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def fun_text(self, text, delimiter=",", index=0, insert_text=""):
         def insert_char_at_position(original_string, char_to_insert, position):
@@ -401,7 +401,7 @@ class SelfNodes_SplitTagsRemoveDuplication:
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "fun_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def fun_text(self, text, delimiter=","):
         split_text = [item.strip() for item in text.split(delimiter)]  # 分割并去除每项的前后空白
@@ -430,7 +430,7 @@ class SelfNodes_PatternSearchReturn:
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "fun_text"
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def fun_text(self, text, pattern=""):
         match = re.search(pattern, text)
@@ -467,7 +467,7 @@ class SelfNodes_randomReturnTags(object):
 
     FUNCTION = "split_and_randomize"
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def split_and_randomize(self, seed, input_text, delimiter, num_items, random_weight, min_weight, max_weight,):
         items = input_text.split(delimiter)
@@ -524,7 +524,7 @@ class SelfNodes_DisruptText:
 
     FUNCTION = "disrupt_text"
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def disrupt_text(self, seed, string, delimiter):
       # 使用指定的分隔符分割字符串
@@ -574,7 +574,7 @@ class SelfNodes_BaiduTranslate:
 
     FUNCTION = "translate"
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def translate(self, input_text, from_lang, to_lang, app_id, app_key):
         if not input_text:
@@ -636,7 +636,7 @@ class SelfNodes_StringToDTGParams(object):
 
     FUNCTION = "splitString"
 
-    CATEGORY = "SelfNodes"
+    CATEGORY = "SelfNodes/文本"
 
     def splitString(self, input_text):
         # Generate a random integer of arbitrary length
@@ -662,6 +662,58 @@ class SelfNodes_StringToDTGParams(object):
 
         return (result_dict["艺术家列表"], result_dict["人物特征"], result_dict["特殊标签"], result_dict["生成"],)
 
+
+class SelfNodes_LoadTextList(object):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
+                "directory": ("STRING", {"default": ""}),
+            },
+            "optional": {
+                "start_index": ("INT", {"default": -1, "min": -1, "step": 1}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING")
+
+    FUNCTION = "loadTextList"
+
+    CATEGORY = "SelfNodes/文本"
+
+    def loadTextList(self, seed, directory: str, start_index: int = 0):
+        if not os.path.isdir(directory):
+            raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
+        dir_files = os.listdir(directory)
+        if len(dir_files) == 0:
+            raise FileNotFoundError(f"No files in directory '{directory}'.")
+
+        random.seed(seed)
+
+        # Filter files by extension
+        valid_extensions = ['.txt']
+        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+
+        dir_files = sorted(dir_files)
+        dir_files = [os.path.join(directory, x) for x in dir_files]
+
+        # start at start_index
+        if start_index>=0 and dir_files[start_index]:
+            dir_files = dir_files[start_index]
+        else:
+            dir_files = dir_files[random.randint(0, len(dir_files)-1)]
+
+        # 加载文件内容
+        result_dict = ""
+        with open(dir_files, 'r', encoding='utf-8') as f:
+            result_dict = f.read()
+        return (result_dict,)
+
+
 #---------------------------------------------------------------------------------------------------------------------#
 # MAPPINGS
 #---------------------------------------------------------------------------------------------------------------------#
@@ -684,7 +736,8 @@ NODE_CLASS_MAPPINGS = {
     "随机返回tags": SelfNodes_randomReturnTags,
     "打乱文本": SelfNodes_DisruptText,
     "百度翻译": SelfNodes_BaiduTranslate,
-    "转成DTG参数": SelfNodes_StringToDTGParams
+    "转成DTG参数": SelfNodes_StringToDTGParams,
+    "文件夹加载txt文件": SelfNodes_LoadTextList
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -704,5 +757,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "随机返回tags": "随机返回tags",
     "打乱文本": "打乱文本",
     "百度翻译": "百度翻译",
-    "转成DTG参数": "转成DTG参数"
+    "转成DTG参数": "转成DTG参数",
+    "文件夹加载txt文件": "文件夹加载txt文件"
 }

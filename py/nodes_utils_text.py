@@ -252,6 +252,7 @@ class SelfNodes_TextBlacklist:
             "required": {
                 "text": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
                 "blacklist_words": ("STRING", {"multiline": True, "default": ""}),
+                "add_comma": ("BOOLEAN", {"default": True}),
                 },
             "optional": {
                 "replacement_text": ("STRING", {"multiline": False, "default": ""}),    
@@ -263,14 +264,15 @@ class SelfNodes_TextBlacklist:
     FUNCTION = "replace_text"
     CATEGORY = "SelfNodes/文本"
 
-    def replace_text(self, text, blacklist_words, replacement_text=""):
+    def replace_text(self, text, blacklist_words, replacement_text="", add_comma=True):
         text_out = text 
 
         for line in blacklist_words.split('\n'):  # Splitting based on line return
             if line.strip():
                 while re.search(line.strip(), text_out):
                     text_out = re.sub(line.strip(), replacement_text, text_out)
-        text_out += ","
+        if add_comma:
+            text_out += ","
 
         return (text_out, )   
 

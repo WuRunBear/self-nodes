@@ -4,6 +4,8 @@ import hashlib
 import random
 import json
 import time
+import os
+import folder_paths
 
 class AnyType(str):
     def __ne__(self, __value: object) -> bool:
@@ -125,6 +127,50 @@ class LimitRatioSize:
 
         return (widht_scaled, height_scaled,)
 
+class SelfNodes_LoraLoader:
+    def __init__(self):
+        self.loaded_lora = None
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL", {"tooltip": "The diffusion model the LoRA will be applied to."}),
+                "clip": ("CLIP", {"tooltip": "The CLIP model the LoRA will be applied to."}),
+                "lora_name": (folder_paths.get_filename_list("loras"), {"tooltip": "The name of the LoRA."}),
+                "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01, "tooltip": "How strongly to modify the diffusion model. This value can be negative."}),
+                "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01, "tooltip": "How strongly to modify the CLIP model. This value can be negative."}),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "CLIP")
+    OUTPUT_TOOLTIPS = ("The modified diffusion model.", "The modified CLIP model.")
+    FUNCTION = "load_lora"
+
+    CATEGORY = "SelfNodes/工具"
+    DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
+
+    def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
+        if strength_model == 0 and strength_clip == 0:
+            return (model, clip)
+
+        lora_path = lora_name
+        lora = None
+        if not os.path.isabs(lora_name):
+            lora_path = folder_paths.get_full_path_or_raise("loras", lora_path)
+            if self.loaded_lora is not None:
+                if self.loaded_lora[0] == lora_path:
+                    lora = self.loaded_lora[1]
+                else:
+                    self.loaded_lora = None
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+        return (model_lora, clip_lora)
+
 
 #---------------------------------------------------------------------------------------------------------------------#
 # MAPPINGS
@@ -134,11 +180,13 @@ class LimitRatioSize:
 NODE_CLASS_MAPPINGS = {
     "停止当前队列": SelfNodes_StopCurrentQueue,
     "范围随机整数": randomToFixedLength,
-    "限制比例大小": LimitRatioSize
+    "限制比例大小": LimitRatioSize,
+    "加载lora（可从路径加载）": SelfNodes_LoraLoader
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "停止当前队列": "停止当前队列",
     "范围随机整数": "范围随机整数",
-    "限制比例大小": "限制比例大小"
+    "限制比例大小": "限制比例大小",
+    "加载lora（可从路径加载）": "加载lora（可从路径加载）"
 }

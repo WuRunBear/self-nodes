@@ -51,7 +51,7 @@ class SelfNodes_SplitString:
                 }            
         }
 
-    RETURN_TYPES = (any_type, any_type, any_type, any_type, "STRING", )
+    RETURN_TYPES = (any_type, any_type, any_type, any_type, )
     RETURN_NAMES = ("string_1", "string_2", "string_3", "string_4", )    
     FUNCTION = "split"
     CATEGORY = "SelfNodes/文本"
@@ -76,7 +76,7 @@ class SelfNodes_Text:
             }
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type,)
     RETURN_NAMES = ("text", )
     FUNCTION = "text_multiline"
     CATEGORY = "SelfNodes/文本"
@@ -101,7 +101,7 @@ class SelfNodes_MultilineText:
             }
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type,)
     RETURN_NAMES = ("multiline_text", )
     FUNCTION = "text_multiline"
     CATEGORY = "SelfNodes/文本"
@@ -202,7 +202,7 @@ class SelfNodes_TextConcatenate:
             },
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type, )
     RETURN_NAMES = ("STRING",)
     FUNCTION = "concat_text"
     CATEGORY = "SelfNodes/文本"
@@ -230,7 +230,7 @@ class SelfNodes_TextReplace:
             },
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type, )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "replace_text"
     CATEGORY = "SelfNodes/文本"
@@ -259,7 +259,7 @@ class SelfNodes_TextBlacklist:
             },
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type, )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "replace_text"
     CATEGORY = "SelfNodes/文本"
@@ -291,7 +291,7 @@ class SelfNodes_TextOperation:
             },
         }
 
-    RETURN_TYPES = (any_type, "STRING", )
+    RETURN_TYPES = (any_type, )
     RETURN_NAMES = ("STRING", )
     FUNCTION = "text_operation"
     CATEGORY = "SelfNodes/文本"
@@ -329,7 +329,7 @@ class SelfNodes_TextLength:
             },
         }
 
-    RETURN_TYPES = ("INT", "STRING", )
+    RETURN_TYPES = ("INT",)
     RETURN_NAMES = ("INT", )
     FUNCTION = "len_text"
     CATEGORY = "SelfNodes/文本"

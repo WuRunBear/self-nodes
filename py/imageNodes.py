@@ -512,7 +512,7 @@ class SelfNodes_LoadImagesDIr(object):
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK", "INT")
+    RETURN_TYPES = ("IMAGE", "MASK", "INT", "STRING")
 
     FUNCTION = "load_images"
 
@@ -534,16 +534,15 @@ class SelfNodes_LoadImagesDIr(object):
         dir_files = sorted(dir_files)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
-        print(len(dir_files))
         # start at start_index
         if start_index>=0 and dir_files[start_index:]:
             dir_files = dir_files[start_index:]
         else:
             dir_files = dir_files[random.randint(0, len(dir_files)-1):]
 
+        file_name = os.path.basename(dir_files[0])
         images = []
         masks = []
-
 
         limit_images = False
         if load_cap > 0:
@@ -573,7 +572,7 @@ class SelfNodes_LoadImagesDIr(object):
             image_count += 1
 
         if len(images) == 1:
-            return (images[0], masks[0], 1)
+            return (images[0], masks[0], 1, file_name)
 
         elif len(images) > 1:
             image1 = images[0]
@@ -599,7 +598,7 @@ class SelfNodes_LoadImagesDIr(object):
                 else:
                     mask1 = torch.cat((mask1, mask2), dim=0)
 
-            return (image1, mask1, len(images))
+        return (image1, mask1, len(images), file_name)
 
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,

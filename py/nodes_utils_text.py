@@ -282,7 +282,7 @@ class SelfNodes_TextOperation:
     @ classmethod
     def INPUT_TYPES(cls):
       
-        operations = ["uppercase", "lowercase", "capitalize", "invert_case", "reverse", "trim", "remove_spaces"]
+        operations = ["uppercase", "lowercase", "capitalize", "invert_case", "reverse", "trim", "remove_spaces", "tags转义"]
     
         return {
             "required": {
@@ -312,6 +312,20 @@ class SelfNodes_TextOperation:
             text_out = text.strip()
         elif operation == "remove_spaces":
             text_out = text.replace(" ", "")
+        elif operation == "tags转义":
+            tags = text.split(',')
+            tags_out = []
+            # 使用 for 循环遍历列表
+            for tag in tags:
+                if not re.compile(r'.*:\d+\)').search(tag): 
+                    if not re.compile(r'\\\(').search(tag):
+                        tag = tag.replace("(", "\(")
+                    if not re.compile(r'\\\)').search(tag):
+                        tag = tag.replace(")", "\)")
+                    tag = re.sub(r'\s{2,}', ' ', tag)
+                    tag = tag.strip()
+                tags_out.append(tag)
+            text_out = ', '.join(tags_out)
         else:
             return "SelfNodes Text Operation: Invalid operation."
 
@@ -589,7 +603,7 @@ class SelfNodes_BaiduTranslate:
         
         salt = str(random.randint(32768, 65536))
         sign = hashlib.md5((app_id + input_text + salt + app_key).encode()).hexdigest()
-        
+
         params = {
             "q": input_text,
             "from": from_lang,
@@ -598,21 +612,12 @@ class SelfNodes_BaiduTranslate:
             "salt": salt,
             "sign": sign
         }
-        print("翻译参数：")
-        print({
-            "q": input_text,
-            "from": from_lang,
-            "to": to_lang,
-            "appid": app_id,
-            "salt": salt,
-            "sign": sign
-        })
         response = requests.get(api_url, params=params)
         print(response.text)
         response_json = json.loads(response.text)
         translation_list = [result["dst"] for result in response_json["trans_result"]]
-        translation = "\n".join(translation_list).lower()
-        
+        translation = "\n".join(translation_list)
+
         print("翻译结果：")
         print(translation)
         return (translation,)

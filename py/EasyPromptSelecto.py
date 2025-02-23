@@ -89,7 +89,7 @@ class EasyPromptSelecto:
             "required": {
                 "text": ("STRING",{"default": "", "multiline": True, }),
                 "prompt_type":(files_name, ),
-                "category":([], ),
+                # "category":(["a"], ),
             },
         }
 

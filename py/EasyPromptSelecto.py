@@ -4,48 +4,48 @@ import json
 import os
 import yaml
 
-#获取组节点
-gdir = os.path.abspath(os.path.join(__file__, "../../groupNode"))
-if not os.path.exists(gdir):
-    os.mkdir(gdir)
+# #获取组节点
+# gdir = os.path.abspath(os.path.join(__file__, "../../groupNode"))
+# if not os.path.exists(gdir):
+#     os.mkdir(gdir)
 
-@PromptServer.instance.routes.get("/selfNode/groupNode")
-async def get_groupNode(request):
-    file=os.path.join(gdir, "groupNodes.json")
-    if os.path.isfile(file):
-        f = open(file,'r', encoding='utf-8')
-        data = json.load(f)
-        return web.json_response(data)
-    return web.Response(status=404)
+# @PromptServer.instance.routes.get("/selfNode/groupNode")
+# async def get_groupNode(request):
+#     file=os.path.join(gdir, "groupNodes.json")
+#     if os.path.isfile(file):
+#         f = open(file,'r', encoding='utf-8')
+#         data = json.load(f)
+#         return web.json_response(data)
+#     return web.Response(status=404)
 
 
 
-@PromptServer.instance.routes.post("/selfNode/groupNode")
-async def save_groupNode(request):
-    json_data = await request.json()
-    file=os.path.join(gdir, "groupNodes.json")
-    if os.path.isfile(file):
-        f = open(file,'r', encoding='utf-8')
-        data = json.load(f)
-    for key in list(json_data.keys()):
-        data[key] = json_data[key]
-    with open(file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-    return web.Response(status=201)
+# @PromptServer.instance.routes.post("/selfNode/groupNode")
+# async def save_groupNode(request):
+#     json_data = await request.json()
+#     file=os.path.join(gdir, "groupNodes.json")
+#     if os.path.isfile(file):
+#         f = open(file,'r', encoding='utf-8')
+#         data = json.load(f)
+#     for key in list(json_data.keys()):
+#         data[key] = json_data[key]
+#     with open(file, 'w', encoding='utf-8') as f:
+#         json.dump(data, f, ensure_ascii=False, indent=4)
+#     return web.Response(status=201)
 
-@PromptServer.instance.routes.post("/selfNode/delGroupNode")
-async def del_groupNode(request):
-    json_data = await request.json()
-    file=os.path.join(gdir, "groupNodes.json")
-    if os.path.isfile(file):
-        f = open(file,'r', encoding='utf-8')
-        data = json.load(f)
-    if 'name' in list(json_data.keys()):
-        if json_data['name'] in data:
-            del data[json_data['name']]
-    with open(file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-    return web.Response(status=201)
+# @PromptServer.instance.routes.post("/selfNode/delGroupNode")
+# async def del_groupNode(request):
+#     json_data = await request.json()
+#     file=os.path.join(gdir, "groupNodes.json")
+#     if os.path.isfile(file):
+#         f = open(file,'r', encoding='utf-8')
+#         data = json.load(f)
+#     if 'name' in list(json_data.keys()):
+#         if json_data['name'] in data:
+#             del data[json_data['name']]
+#     with open(file, 'w', encoding='utf-8') as f:
+#         json.dump(data, f, ensure_ascii=False, indent=4)
+#     return web.Response(status=201)
 
 #获取提示词
 dir = os.path.abspath(os.path.join(__file__, "../../tags"))
@@ -87,10 +87,10 @@ class EasyPromptSelecto:
 
         return {
             "required": {
-                "text": ("STRING",{"default": ""}),
+                "text": ("STRING",{"default": "", "multiline": True, }),
                 "prompt_type":(files_name, ),
+                "category":([], ),
             },
-            "hidden": {"unique_id": "UNIQUE_ID","wprompt":"PROMPT"},
         }
 
     RETURN_TYPES = ("STRING",)
@@ -102,13 +102,8 @@ class EasyPromptSelecto:
 
     CATEGORY = "SelfNodes/工具"
 
-    def translate(self,prompt_type,unique_id,wprompt,text=''):
-        values = ''
-        if unique_id in wprompt:
-            if wprompt[unique_id]["inputs"]['tags']:
-                #分割字符串
-                values = wprompt[unique_id]["inputs"]['tags']
-        return (text+values,)
+    def translate(self,prompt_type,text=''):
+        return (text,)
 
 # A dictionary that contains all nodes you want to export with their names
 # NOTE: names should be globally unique

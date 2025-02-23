@@ -35,7 +35,7 @@ $el("style", {
         list-style: none;
         gap: 10px;
         min-height: 100px;
-        height: 45%;
+        height: 86%;
         overflow: auto;
         margin: 10px 0;
         padding: 0;
@@ -161,8 +161,8 @@ async function getPrompt(name) {
     if(pb_cache[name])
 		return pb_cache[name];
 	else {
-        if(pb_cache[name] !== true) {
-            pb_cache[name] = true;
+        if(pb_cache[name] !== false) {
+            pb_cache[name] = false;
             try {
                 const resp = await api.fetchApi(`/selfNode/getPrompt?name=${name}`);
                 if (resp.status === 200) {
@@ -179,153 +179,83 @@ async function getPrompt(name) {
     }
     
 }
-function getTagList(tags,cat) {
-    let rlist=[]
-    Object.keys(tags).forEach((k) => {
-        if (typeof tags[k] === "string") {
-            let t=[k, tags[k]]
-            rlist.push($el(
-                "li.selfNode-model-tag",
-                {
-                    dataset: {
-                        tag: t[1],
-                        name: t[0],
-                        cat:cat,
-                        weight: 1
-                    },
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.classList.toggle("selfNode-model-tag--selected");
-                        };
-                    },
-                },
-                [
-                    $el("p", {
-                        textContent: t[0],
-                    }),
-                    $el("span.lable", {
-                        textContent: t[1],
-                    }),
-                ]
-            ))
-        }else{
-            rlist.push(...getTagList(tags[k],cat))
+function splitAndExtract(part) {
+    if (part.startsWith('(') && part.endsWith(')')) {
+        // 去掉首尾括号
+        part = part.slice(1, -1);
+        // 查找冒号的位置
+        const colonIndex = part.indexOf(':');
+        if (colonIndex!== -1) {
+            // 提取冒号之前的部分
+            part = part.slice(0, colonIndex);
         }
-    });
-    return rlist
-}
-function getSelList(tags) {
-    let rlist=[]
-    Object.keys(tags).forEach((k) => {
-        rlist.push($el(
-            "li.selfNode-model-tag",
-            {
-                dataset: {
-                    name:  tags[k]['name'],
-                    tag: tags[k]['tag'],
-                    cat: tags[k]['cat'],
-                    weight: tags[k]['weight'],
-                },
-                // $: (el) => {
-                //     el.onclick = () => {
-                //         el.classList.add("selfNode-model-tag--del");
-                //     };
-                // },
-            },
-            [
-                $el("span.btn", {
-                    textContent: "<",
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.parentElement.classList.add("selfNode-model-tag--left");
-                        };
-                    },
-                }),
-                $el("span.btn", {
-                    textContent: "-",
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.parentElement.dataset.weight = (((Number(el.parentElement.dataset.weight)*1000)-(0.05*1000))/1000).toFixed(2);
-                        };
-                    },
-                }),
-                $el("p", {
-                    textContent: tags[k]['name'],
-                }),
-                $el("span.lable", {
-                    textContent: tags[k]['weight'],
-                }),
-                $el("span.lable", {
-                    textContent: tags[k]['cat'],
-                }),
-                $el("span.btn", {
-                    textContent: "+",
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.parentElement.dataset.weight = (((Number(el.parentElement.dataset.weight)*1000)+(0.05*1000))/1000).toFixed(2);
-                        };
-                    },
-                }),
-                $el("span.btn", {
-                    textContent: "X",
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.parentElement.classList.add("selfNode-model-tag--del");
-                        };
-                    },
-                }),
-                $el("span.btn", {
-                    textContent: ">",
-                    $: (el) => {
-                        el.onclick = () => {
-                            el.parentElement.classList.add("selfNode-model-tag--right");
-                        };
-                    },
-                }),
-            ]
-        ))
-    })
-    return rlist;
+        // 替换 "("与")" 为 \
+        part = part.replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+    }
+    if (part) {
+        return part;
+    }
+    return '';
 }
 // Displays input text on a node
 app.registerExtension({
     name: "EasyPromptSelecto",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-		var names=['EasyPromptSelecto']
+		let names=['EasyPromptSelecto']
         if (names.indexOf(nodeData.name)>=0) {
             // When the node is created we want to add a readonly text widget to display the text
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function() {
                 const r = onNodeCreated?.apply(this, arguments);
-                this.setProperty("values", [])
-                this.setProperty("selTags", {})
-                ComfyWidgets["COMBO"](this, "category", ['a','b']).widget;
-                const list = $el("ol.selfNode-model-tags-list",[]);
-                const lists = $el("ol.selfNode-model-tags-sel-list",[]);
                 let prompt_type = this.widgets[this.widgets.findIndex(obj => obj.name === 'prompt_type')];
                 let textEl = this.widgets[this.widgets.findIndex(obj => obj.name === 'text')];
                 let category = this.widgets[this.widgets.findIndex(obj => obj.name === 'category')];
-                let cat_values=[]
-                let cat_value=''
-                let tagsValue=''
+
+                const list = $el("ol.selfNode-model-tags-list",[]);
+
+                let getTagList = (tags,cat) => {
+                    let rlist=[]
+                    Object.keys(tags).forEach((k) => {
+                        if (typeof tags[k] === "string") {
+                            let t=[k, tags[k]]
+                            rlist.push($el(
+                                "li.selfNode-model-tag",
+                                {
+                                    dataset: {
+                                        tag: t[1],
+                                        name: t[0],
+                                        cat:cat,
+                                        weight: 1
+                                    },
+                                    $: (el) => {
+                                        el.onclick = () => {
+                                            if (
+                                                !(new RegExp(`,?\\(?${t[1]}\\)?,?`, "g")).test(textEl.value)
+                                                && textEl.value.indexOf(t[1]) == -1
+                                            ) {
+                                                textEl.value = `${textEl.value}, ${t[1]}`;
+                                            }
+                                        };
+                                    },
+                                },
+                                [
+                                    $el("p", {
+                                        textContent: t[0],
+                                    }),
+                                    $el("span.lable", {
+                                        textContent: t[1],
+                                    }),
+                                ]
+                            ))
+                        }else{
+                            rlist.push(...getTagList(tags[k],cat))
+                        }
+                    });
+                    return rlist
+                }
 
                 let tags=this.addDOMWidget('tags',"list",$el('div.selfNode-preview',[
                         $el('span',[
-                            $el(
-                                'button.remove-button',
-                                {
-                                    textContent:'清除全部选择',
-                                    style:{},
-                                    onclick:()=>{
-                                        tags.element.children[1].querySelectorAll(".selfNode-model-tag--selected").forEach(el => {
-                                            el.classList.remove("selfNode-model-tag--selected");
-                                        })
-                                        this.properties["values"]=[]
-                                        this.properties['selTags']={}
-                                        tags.element.children[3].innerHTML=''
-                                    }
-                                }
-                            ),
                             $el(
                                 'button.reload-button',
                                 {
@@ -334,144 +264,62 @@ app.registerExtension({
                                     onclick:()=>{
                                         if(pb_cache[prompt_type.value]!=true) {
                                             pb_cache[prompt_type.value] = undefined;
-                                            getPrompt(prompt_type.value);
+                                            getPrompt(prompt_type.value)
+                                                .then(data => {
+                                                    if (data) {
+                                                        category.options.values = Object.keys(data);
+                                                        category.value = category.value? category.value : category.options.values[0];
+
+                                                        tags.element.children[1].innerHTML='';
+                                                        tags.element.children[1].append(...getTagList(data[category.value], category.value));
+                                                    }
+                                                });;
                                         }
                                     }
                                 }
                             ),
                         ]),
                         list,
-                        $el('span',{textContent:"选择内容"}),
-                        lists
                     ]));
 
-                Object.defineProperty(category.options, "values", {
-                    set: (x) => {
-                    },
-                    get: () => {
-                        getPrompt(prompt_type.value);
-                        if(pb_cache[prompt_type.value] == undefined && pb_cache[prompt_type.value] == true) {
-                            return cat_values;
-                        }
-                        if(cat_values.join(',')!=Object.keys(pb_cache[prompt_type.value]).join(',')){
-                            cat_values=Object.keys(pb_cache[prompt_type.value])
-                            cat_value=''
-                            category.value=cat_values[0]
-                        }
-                        return cat_values;
-                    }
-                });
-                Object.defineProperty(category, "value", {
-                    set: (x) => {
-                        if(cat_value!=x){
-                            cat_value=x;
-                            if(!cat_value){
-                                return 
-                            }
-                            if(pb_cache[prompt_type.value]&&pb_cache[prompt_type.value][cat_value]){
-                                tags.element.children[1].innerHTML=''
-                                let list =getTagList(pb_cache[prompt_type.value][cat_value],cat_value);
-                                tags.element.children[1].append(...list)
-                            }
-                            tags.element.children[1].querySelectorAll(".selfNode-model-tag").forEach(el => {
-                                if(this.properties["values"].includes(el.dataset.tag)){
-                                    el.classList.add("selfNode-model-tag--selected");
+                const initTags = () => {
+                    console.log("initTags", prompt_type.value);
+                    setTimeout(() => {
+                        getPrompt(prompt_type.value)
+                            .then(data => {
+                                if (data) {
+                                    category.options.values = Object.keys(data);
+        
+                                    tags.element.children[1].innerHTML='';
+                                    tags.element.children[1].append(...getTagList(data[category.value], category.value));
+                                } else {
+                                    initTags()
                                 }
                             });
-                            // this.setSize([600, 700]);
+                    }, 500);
+                }
+                initTags();
+                prompt_type.callback = () => {
+                    console.log("prompt_type.callback", prompt_type.value);
+                    getPrompt(prompt_type.value)
+                        .then(data => {
+                            if (data) {
+                                category.options.values = Object.keys(data);
+                                category.value = category.options.values[0];
 
-                            
-                        }
-                    },
-                    get: () => {
-                        if(pb_cache[prompt_type.value]&&pb_cache[prompt_type.value][cat_value]&&tags.element.children[1].children.length==0){
-                            let list =getTagList(pb_cache[prompt_type.value][cat_value],cat_value);
-                            tags.element.children[1].append(...list)
-                            tags.element.children[1].querySelectorAll(".selfNode-model-tag").forEach(el => {
-                                if(this.properties["values"].includes(el.dataset.tag)){
-                                    el.classList.add("selfNode-model-tag--selected");
-                                }
-                                // this.setSize([600, 700]);
-                            });
-                        }
-                        return cat_value;
-                    }
-                });               
-                Object.defineProperty(tags, "value", {
-                    set: (x) => {
-                        
-                    },
-                    get: () => {
-                        let namestr=Object.values(this.properties["selTags"]).map(item => {
-                            if(item.weight!=1) {
-                                return `(${item.tag}:${item.weight})`;
-                            } else {
-                                return item.tag;
-                            }
-                        }).join(',')
-                        let delList=[]
-                        tags.element.children[3].querySelectorAll(".selfNode-model-tag--del").forEach(el => {
-                            delList.push(el.dataset.tag)
-                        })
-                        tags.element.children[1].querySelectorAll(".selfNode-model-tag").forEach(el => {
-                            if(el.classList.value.indexOf("selfNode-model-tag--selected")>=0&&!delList.includes(el.dataset.tag)){
-                                if(!this.properties["values"].includes(el.dataset.tag)){
-                                    this.properties["values"].push(el.dataset.tag);
-                                }
-                                if(!Object.keys(this.properties['selTags']).includes(el.dataset.tag)){
-                                    this.properties['selTags'][el.dataset.tag]={tag:el.dataset.tag,name:el.dataset.name,cat:el.dataset.cat,weight:Number(el.dataset.weight)}
-                                }
-                            }else{
-                                if(delList.includes(el.dataset.tag)){
-                                    el.classList.remove("selfNode-model-tag--selected");
-                                    delList=delList.filter(v=>v!=el.dataset.tag)
-                                }
-                                if(this.properties["values"].includes(el.dataset.tag)){
-                                    this.properties["values"]=this.properties["values"].filter(v=>v!=el.dataset.tag);
-                                    delete this.properties['selTags'][el.dataset.tag];
-                                }
+                                tags.element.children[1].innerHTML='';
+                                tags.element.children[1].append(...getTagList(data[category.value], category.value));
                             }
                         });
-                        let left = tags.element.children[3].querySelector(".selfNode-model-tag--left");
-                        if(left && left.previousSibling) {
-                            tags.element.children[3].insertBefore(left, left.previousSibling);
-                            left.classList.remove("selfNode-model-tag--left");
-                        }
-                        let right = tags.element.children[3].querySelector(".selfNode-model-tag--right");
-                        if(right && right.nextSibling) {
-                            tags.element.children[3].insertBefore(right.nextSibling, right);
-                            right.classList.remove("selfNode-model-tag--right");
-                        }
-                        tags.element.children[3].querySelectorAll(".selfNode-model-tag").forEach(el => {
-                            if(Object.keys(this.properties['selTags']).includes(el.dataset.tag)){
-                                this.properties['selTags'][el.dataset.tag]={tag:el.dataset.tag,name:el.dataset.name,cat:el.dataset.cat,weight:Number(el.dataset.weight)}
-                            }
-                        })
-                        for(let i=0;i<delList.length;i++){
-                            if(this.properties["values"].includes(delList[i])){
-                                this.properties["values"]=this.properties["values"].filter(v=>v!=delList[i]);
-                                delete this.properties['selTags'][delList[i]];
-                            }
-                        }
-                        tagsValue = Object.values(this.properties["selTags"]).map(item => {
-                            if(item.weight!=1) {
-                                return `(${item.tag}:${item.weight})`;
-                            } else {
-                                return item.tag;
-                            }
-                        }).join(',');
-                        if(namestr!=tagsValue||tags.element.children[3].innerHTML==''){
-                            if(Object.keys(this.properties['selTags']).length>0){
-                                let sellist=getSelList(this.properties['selTags'])
-                                tags.element.children[3].innerHTML=''
-                                tags.element.children[3].append(...sellist)
-                            }else{
-                                tags.element.children[3].innerHTML=''
-                            }
-                        }
-                        return tagsValue;
+                }
+                category.callback = () => {
+                    console.log("category.callback", category.value);
+                    if(pb_cache[prompt_type.value] && pb_cache[prompt_type.value][category.value]) {
+                        tags.element.children[1].innerHTML='';
+                        tags.element.children[1].append(...getTagList(pb_cache[prompt_type.value][category.value],category.value));
                     }
-                });
+                }
+
                 this.setSize([600, 700]);
                 return r;
             };

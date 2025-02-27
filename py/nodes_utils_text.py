@@ -282,12 +282,13 @@ class SelfNodes_TextOperation:
     @ classmethod
     def INPUT_TYPES(cls):
       
-        operations = ["uppercase", "lowercase", "capitalize", "invert_case", "reverse", "trim", "remove_spaces", "tags转义"]
+        operations = ["uppercase", "lowercase", "capitalize", "invert_case", "reverse", "trim", "remove_spaces", "tags转义", "右补零", "左补零"]
     
         return {
             "required": {
-                "text": ("STRING", {"multiline": False, "default": "", "forceInput": True}),            
+                "text": ("STRING", {"multiline": False, "default": "", "forceInput": True}),
                 "operation": (operations,),
+                "length": ("INT", {"default": 1, "min": 0, "max": 9999, "step": 1}),
             },
         }
 
@@ -296,7 +297,7 @@ class SelfNodes_TextOperation:
     FUNCTION = "text_operation"
     CATEGORY = "SelfNodes/文本"
 
-    def text_operation(self, text, operation):
+    def text_operation(self, text, operation, length):
     
         if operation == "uppercase":
             text_out = text.upper()
@@ -326,6 +327,10 @@ class SelfNodes_TextOperation:
                     tag = tag.strip()
                 tags_out.append(tag)
             text_out = ', '.join(tags_out)
+        elif operation == "右补零":
+            text_out = text.ljust(length, '0')
+        elif operation == "左补零":
+            text_out = text.rjust(length, '0')
         else:
             return "SelfNodes Text Operation: Invalid operation."
 

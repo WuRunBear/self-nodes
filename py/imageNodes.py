@@ -69,12 +69,16 @@ class SaveImageNotPreview(object):
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
-            if filename_full != "" and not os.path.exists(os.path.join(full_output_folder, f"{filename_full}.png")):
+            _, ext = os.path.splitext(filename_full)
+            if not bool(ext):
+                filename_full = f"{filename_full}.png"
+
+            if filename_full != "" and not os.path.exists(os.path.join(full_output_folder, f"{filename_full}")):
                 filename_with_batch_num = filename_full
             else:
                 filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-                filename_with_batch_num = f"{filename_full}{filename_with_batch_num}_{counter:05}_"
-            file = f"{filename_with_batch_num}.png"
+                filename_with_batch_num = f"{_}{filename_with_batch_num}_{counter:05}_"
+            file = f"{filename_with_batch_num}"
             img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
             results.append({
                 "filename": file,
@@ -520,19 +524,22 @@ class SelfNodes_LoadImagesDIr(object):
 
     def load_images(self, seed, directory: str, load_cap: int = -1, start_index: int = 0):
         if not os.path.isdir(directory):
-            raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
-        dir_files = os.listdir(directory)
+            dir_files = [directory]
+            # raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
+        else:
+            dir_files = os.listdir(directory)
         if len(dir_files) == 0:
             raise FileNotFoundError(f"No files in directory '{directory}'.")
 
         random.seed(seed)
 
-        # Filter files by extension
-        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
-        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
-
-        dir_files = sorted(dir_files)
-        dir_files = [os.path.join(directory, x) for x in dir_files]
+        if os.path.isdir(directory):
+            # Filter files by extension
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+            dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+    
+            dir_files = sorted(dir_files)
+            dir_files = [os.path.join(directory, x) for x in dir_files]
 
         # start at start_index
         if start_index>=0 and dir_files[start_index:]:

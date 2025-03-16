@@ -43,7 +43,7 @@ DNF:
     梅花十三自然语言描述: 这件作品是“scissor seven”系列的一部分，以一名叫thirteen的角色为特色。thirteen是一位有着蓝色头发和绿眼睛的年轻女子。
     梅花十三衣服自然语言描述: thirteen穿着一件高领的紧身蓝绿色中国风的旗袍，旗袍下还穿着黑色紧身衣。
     曼珠沙华: manjusaka \(scissor seven\)
-    曼珠沙华描述: red eyes, white hair, red hair, streaked hair, slit pupils, 
+    曼珠沙华描述: red eyes, (white hair:0.5), red hair, streaked hair, slit pupils, 
     曼珠沙华衣服描述: dress, clothing cutout, cleavage cutout, fur trim, fur coat,
     曼珠沙华自然语言描述: 这件作品是“scissor seven”系列的一部分，以一名叫manjusaka的角色为特色。manjusaka是一个身材小巧性感的年轻女子，她的有着娇小但性感的身材，身材苗条，胸部丰满。
     曼珠沙华衣服自然语言描述: manjusaka穿着一件有毛皮镶边的紫色长外套，里面穿着一件低领黑色和紫色连衣裙。
@@ -53,16 +53,16 @@ DNF:
     非人哉 (风格): feiren zai \(style\), flat color
     插图 (非人哉): illustration \(feiren zai\),
     非人哉 (风格) 1: (m-da s-tarou:0.82),(miyo \(ranthath\):0.43),(iesupa:0.56),(kanikama:0.61),(feiren zai \(style\), flat color:0.8),(DreikoAi:0.8)
-    龙女: longnv \(feiren zai\)
-    龙女描述: dragon horns, horns, blue hair, yellow eyes,animal ears,short eyebrows, thick eyebrow,
+    龙女: longnv \(feiren zai\),
+    龙女描述: dragon horns, grayish blue horns, grayish blue hair, yellow eyes, animal ears, short eyebrows, thick eyebrow,blunt bangs,
     龙女自然语言描述: 这件作品是“feiren zai”系列的一部分，以一名叫longnv的角色为特色。longnv是一个12岁的小女孩，她有着蓝色的头发，留着直刘海，在刘海下长着一对与头发相同颜色的角。
-    九月: jiuyue \(feiren zai\)
+    九月: jiuyue \(feiren zai\),
     九月描述: white hair, short hair, blunt bangs, fox ears, animal ears, black eyes, multiple tails, fox tail, white tail 
-    小玉: xiaoyu \(feiren zai\)
+    小玉: xiaoyu \(feiren zai\),
     小玉描述: rabbit girl, animal ears, rabbit ears, blonde hair, black eyes,red eyes, animal ear fluff,
     小玉自然语言描述: 这件作品是“feiren zai”系列的一部分，以一名角色叫xiaoyu特色。xiaoyu是一个身材娇小的成年女性。xiaoyu长着兔子耳朵、金色卷曲头发。
-    精卫: jingwei \(feiren zai\)
-    精卫描述: green hair to red hair, multicolored hair, two-tone hair, black eyes, green eyes, parted bangs,
+    精卫: jingwei \(feiren zai\),
+    精卫描述: green hair, red hair, multicolored hair, two-tone hair, black eyes, green eyes, parted bangs,
     精卫自然语言描述: 这件作品是“feiren zai”系列的一部分，以一名叫jingwei的角色为特色。jingwei是身材娇小的成年女性，她有着绿色的头发，并且头发末端是红色的。
 机动奥特曼:
     女巴尔吉星人: woman valky \(ultraman\),

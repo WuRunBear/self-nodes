@@ -207,7 +207,7 @@ app.registerExtension({
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function() {
                 const r = onNodeCreated?.apply(this, arguments);
-                ComfyWidgets["COMBO"](this, "category", ['a','b']).widget;
+                ComfyWidgets["COMBO"](this, "category", [['a','b']]).widget;
                 let prompt_type = this.widgets[this.widgets.findIndex(obj => obj.name === 'prompt_type')];
                 let textEl = this.widgets[this.widgets.findIndex(obj => obj.name === 'text')];
                 let category = this.widgets[this.widgets.findIndex(obj => obj.name === 'category')];

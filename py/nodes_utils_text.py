@@ -691,7 +691,7 @@ class SelfNodes_LoadTextList(object):
             }
         }
 
-    RETURN_TYPES = ("STRING")
+    RETURN_TYPES = ("STRING",)
 
     FUNCTION = "loadTextList"
 
@@ -703,6 +703,9 @@ class SelfNodes_LoadTextList(object):
         dir_files = os.listdir(directory)
         if len(dir_files) == 0:
             raise FileNotFoundError(f"No files in directory '{directory}'.")
+
+        # 加载文件内容
+        result_dict = ""
 
         random.seed(seed)
 
@@ -719,8 +722,6 @@ class SelfNodes_LoadTextList(object):
         else:
             dir_files = dir_files[random.randint(0, len(dir_files)-1)]
 
-        # 加载文件内容
-        result_dict = ""
         with open(dir_files, 'r', encoding='utf-8') as f:
             result_dict = f.read()
         return (result_dict,)

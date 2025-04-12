@@ -14,6 +14,7 @@ import pytorch_lightning as pl
 import clip
 import requests
 import random
+from imgutils.detect import detect_person
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -607,6 +608,112 @@ class SelfNodes_LoadImagesDIr(object):
 
         return (image1, mask1, len(images), file_name)
 
+
+class SelfNodes_JoinImages(object):
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                # "width": ("INT", {"default": 1024, "min": 64, "max": 2048}),
+                # "height": ("INT", {"default": 1024, "min": 64, "max": 2048}),
+                "images1": ("IMAGE", ),
+                "images2": ("IMAGE", ),
+                "position": (["top", "bottom", "left", "right", "overlay"],  {"default": "top"}),
+                "fg_offset_X": ("INT", {"default": 0, "max": 0xffffffffffffffff}),
+                "fg_offset_Y": ("INT", {"default": 0, "max": 0xffffffffffffffff}),
+            },
+        }
+
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "join_images"
+
+    CATEGORY = "SelfNodes/图片"
+
+    def join_images(self, images1, images2, position, fg_offset_X, fg_offset_Y,):
+        def concatenate_images(base_image, join_image, position='bottom'):
+            # 获取拼接后图像的尺寸
+            base_width, base_height = base_image.size
+            join_width, join_height = join_image.size
+
+            if position == 'bottom':
+                # 拼接在底部
+                new_image = Image.new('RGB', (base_width, base_height + join_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0))
+                new_image.paste(join_image, (0, base_height))
+            elif position == 'top':
+                # 拼接在顶部
+                new_image = Image.new('RGB', (base_width, base_height + join_height), (255, 255, 255))
+                new_image.paste(join_image, (0, 0))
+                new_image.paste(base_image, (0, join_height))
+            elif position == 'right':
+                # 拼接在右侧
+                new_image = Image.new('RGB', (base_width + join_width, base_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0))
+                new_image.paste(join_image, (base_width, 0))
+            elif position == 'left':
+                # 拼接在左侧
+                new_image = Image.new('RGB', (base_width + join_width, base_height), (255, 255, 255))
+                new_image.paste(join_image, (0, 0))
+                new_image.paste(base_image, (join_width, 0))
+            elif position == 'overlay':
+                # 叠加
+                max_base_width = max(base_width, join_width)
+                max_base_height = max(base_height, join_height)
+                new_image = Image.new('RGBA', (max_base_width+abs(fg_offset_X), max_base_height+abs(fg_offset_Y)), (255, 255, 255))
+                centre_x = int(max_base_width/2)
+                centre_y = int(max_base_height/2)
+                # Image.alpha_composite(base_image)
+                new_image.paste(base_image, (centre_x-int(base_width/2), centre_y-int(base_height/2)), base_image)
+                new_image.paste(join_image, (centre_x-int(join_width/2)+fg_offset_X, centre_y-int(join_height/2)+fg_offset_Y), join_image)
+                new_image = new_image.convert("RGB")
+
+            return new_image
+
+        # Define font settings
+        result_image = []
+        for batch_number, image in enumerate(images1):
+            i1 = 255. * image.cpu().numpy()
+            img1 = Image.fromarray(np.clip(i1, 0, 255).astype(np.uint8))
+
+            i2 = 255. * images2[0].cpu().numpy()
+            img2 = Image.fromarray(np.clip(i2, 0, 255).astype(np.uint8))
+
+            result_image.append(pil2tensor(concatenate_images(img1, img2, position=position)))
+
+        return  (torch.cat(result_image, dim=0), )
+
+class SelfNodes_PersonSplit(object):
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE", ),
+                "level": (["n", "s", "m", "x"], {"default": "m"}),
+                "conf_threshold": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0}),
+                "iou_threshold": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "person_split"
+    CATEGORY = "SelfNodes/图片"
+
+    def person_split(self, images, level: str = 'm', conf_threshold: float = 0.3, iou_threshold: float = 0.5, ):
+        result_image = []
+        for batch_number, image in enumerate(images):
+            i1 = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i1, 0, 255).astype(np.uint8))
+
+            detection = detect_person(img, level, 'v1.1', conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+
+            for i, (area, type_, score) in enumerate(detection):
+                result_image.append(pil2tensor(img.crop(area)))
+
+        return  (torch.cat(result_image, dim=0), )
+
+
 NODE_CLASS_MAPPINGS = {
     "保存图片JPG": SaveImageJPG,
     "保存图片WEBP": SaveImageWEBP,
@@ -615,6 +722,8 @@ NODE_CLASS_MAPPINGS = {
     "图片美学评分": ImageScorer,
     "从URL加载图片": LoadImagesFromURL,
     "文件夹加载图片": SelfNodes_LoadImagesDIr,
+    "拼接图片": SelfNodes_JoinImages,
+    "裁剪人物主体": SelfNodes_PersonSplit,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -625,4 +734,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "图片美学评分": "图片美学评分",
     "从URL加载图片": "从URL加载图片",
     "文件夹加载图片": "文件夹加载图片",
+    "裁剪人物主体": "裁剪人物主体",
 }

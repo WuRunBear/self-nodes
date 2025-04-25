@@ -55,6 +55,7 @@ class SaveImageNotPreview(object):
     CATEGORY = "SelfNodes/图片"
 
     def save_images(self, images, filename_full="", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
+        print(filename_full, filename_prefix)
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
         results = list()
@@ -639,36 +640,45 @@ class SelfNodes_JoinImages(object):
 
             if position == 'bottom':
                 # 拼接在底部
-                new_image = Image.new('RGB', (base_width, base_height + join_height), (255, 255, 255))
-                new_image.paste(base_image, (0, 0))
-                new_image.paste(join_image, (0, base_height))
+                new_image = Image.new('RGBA', (base_width, base_height + join_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0), base_image)
+                new_image.paste(join_image, (0, base_height), join_image)
             elif position == 'top':
                 # 拼接在顶部
-                new_image = Image.new('RGB', (base_width, base_height + join_height), (255, 255, 255))
-                new_image.paste(join_image, (0, 0))
-                new_image.paste(base_image, (0, join_height))
+                new_image = Image.new('RGBA', (base_width, base_height + join_height), (255, 255, 255))
+                new_image.paste(join_image, (0, 0), join_image)
+                new_image.paste(base_image, (0, join_height), base_image)
             elif position == 'right':
                 # 拼接在右侧
-                new_image = Image.new('RGB', (base_width + join_width, base_height), (255, 255, 255))
-                new_image.paste(base_image, (0, 0))
-                new_image.paste(join_image, (base_width, 0))
+                new_image = Image.new('RGBA', (base_width + join_width, base_height), (255, 255, 255))
+                new_image.paste(base_image, (0, 0), base_image)
+                new_image.paste(join_image, (base_width, 0), join_image)
             elif position == 'left':
                 # 拼接在左侧
-                new_image = Image.new('RGB', (base_width + join_width, base_height), (255, 255, 255))
-                new_image.paste(join_image, (0, 0))
-                new_image.paste(base_image, (join_width, 0))
+                new_image = Image.new('RGBA', (base_width + join_width, base_height), (255, 255, 255))
+                new_image.paste(join_image, (0, 0), join_image)
+                new_image.paste(base_image, (join_width, 0), base_image)
             elif position == 'overlay':
                 # 叠加
                 max_base_width = max(base_width, join_width)
                 max_base_height = max(base_height, join_height)
-                new_image = Image.new('RGBA', (max_base_width+abs(fg_offset_X), max_base_height+abs(fg_offset_Y)), (255, 255, 255))
+                new_img_w = max_base_width
+                new_img_h = max_base_height
                 centre_x = int(max_base_width/2)
                 centre_y = int(max_base_height/2)
+
+                fg_X = centre_x-int(join_width/2)+fg_offset_X
+                fg_Y = centre_y-int(join_height/2)+fg_offset_Y
+                if (new_img_w<fg_X+join_width):
+                    new_img_w = new_img_w+abs(new_img_w-(fg_X+join_width))
+                if (new_img_h<fg_Y+join_height):
+                    new_img_h = new_img_h+abs(new_img_h-(fg_Y+join_height))
+                new_image = Image.new('RGBA', (new_img_w, new_img_h), (255, 255, 255))
                 # Image.alpha_composite(base_image)
                 new_image.paste(base_image, (centre_x-int(base_width/2), centre_y-int(base_height/2)), base_image)
-                new_image.paste(join_image, (centre_x-int(join_width/2)+fg_offset_X, centre_y-int(join_height/2)+fg_offset_Y), join_image)
-                new_image = new_image.convert("RGB")
+                new_image.paste(join_image, (fg_X, fg_Y), join_image)
 
+            new_image = new_image.convert("RGB")
             return new_image
 
         # Define font settings
@@ -710,6 +720,7 @@ class SelfNodes_PersonSplit(object):
 
             for i, (area, type_, score) in enumerate(detection):
                 result_image.append(pil2tensor(img.crop(area)))
+                break
 
         return  (torch.cat(result_image, dim=0), )
 

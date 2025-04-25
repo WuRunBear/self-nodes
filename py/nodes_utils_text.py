@@ -726,6 +726,41 @@ class SelfNodes_LoadTextList(object):
             result_dict = f.read()
         return (result_dict,)
 
+class SelfNodes_QuicklySelectLoraVersion(object):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "base_path": ("STRING", {
+                    "default": "/home/jovyan/work/data/output_data",
+                    "multiline": True,
+                }),
+                "path": ("STRING", {
+                    "default": "/v/prod/",
+                    "multiline": True,
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+
+    FUNCTION = "quicklySelectLoraVersion"
+
+    CATEGORY = "SelfNodes/文本"
+
+    def quicklySelectLoraVersion(self, seed: int, base_path: str, path: str):
+        # seed转为字符串
+        ver = str(seed)
+        if os.path.isdir(base_path):
+            # 拼接路径
+            lora_path = os.path.join(base_path, (path + "-" + ver.rjust(6, '0') + ".safetensors"))
+            return (lora_path,)
+        return ("", )
+
 
 #---------------------------------------------------------------------------------------------------------------------#
 # MAPPINGS
@@ -750,7 +785,8 @@ NODE_CLASS_MAPPINGS = {
     "打乱文本": SelfNodes_DisruptText,
     "百度翻译": SelfNodes_BaiduTranslate,
     "转成DTG参数": SelfNodes_StringToDTGParams,
-    "文件夹加载txt文件": SelfNodes_LoadTextList
+    "文件夹加载txt文件": SelfNodes_LoadTextList,
+    "快速选择Lora版本": SelfNodes_QuicklySelectLoraVersion,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -771,5 +807,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "打乱文本": "打乱文本",
     "百度翻译": "百度翻译",
     "转成DTG参数": "转成DTG参数",
-    "文件夹加载txt文件": "文件夹加载txt文件"
+    "文件夹加载txt文件": "文件夹加载txt文件",
+    "快速选择Lora版本": "快速选择Lora版本",
 }

@@ -8,6 +8,7 @@ import hashlib
 import random
 import json
 import time
+import yaml
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -762,6 +763,40 @@ class SelfNodes_QuicklySelectLoraVersion(object):
         return ("", )
 
 
+class SelfNodes_YamlRandomReturnVal(object):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}) ,
+                "yaml_content": ("STRING", {
+                    "multiline": True,
+                    "default": ""
+                }),
+            }
+        }
+    RETURN_TYPES = ("STRING",)
+
+    FUNCTION = "yamlRandomReturnVal"
+
+    CATEGORY = "SelfNodes/文本"
+
+    def yamlRandomReturnVal(self, seed, yaml_content: str):
+        random.seed(seed)
+
+        # 加载yaml内容
+        yaml_dict = yaml.load(yaml_content, Loader=yaml.FullLoader)
+        result = []
+        for category, items in yaml_dict.items():
+            # 随机选择一个键值对（这里取键和值）
+            selected_key, selected_value = random.choice(list(items.items()))
+            result.append(selected_value)
+        # 返回使用分隔符连接的结果
+        return (", ".join(result),)
+
 #---------------------------------------------------------------------------------------------------------------------#
 # MAPPINGS
 #---------------------------------------------------------------------------------------------------------------------#
@@ -787,6 +822,7 @@ NODE_CLASS_MAPPINGS = {
     "转成DTG参数": SelfNodes_StringToDTGParams,
     "文件夹加载txt文件": SelfNodes_LoadTextList,
     "快速选择Lora版本": SelfNodes_QuicklySelectLoraVersion,
+    "yaml随机返回val": SelfNodes_YamlRandomReturnVal,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -809,4 +845,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "转成DTG参数": "转成DTG参数",
     "文件夹加载txt文件": "文件夹加载txt文件",
     "快速选择Lora版本": "快速选择Lora版本",
+    "yaml随机返回val": "yaml随机返回val",
 }

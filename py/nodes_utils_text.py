@@ -9,6 +9,7 @@ import random
 import json
 import time
 import yaml
+import uuid
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -629,6 +630,149 @@ class SelfNodes_BaiduTranslate:
         return (translation,)
 
 
+class SelfNodes_Translate:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "service": (["baidu", "youdao"], {"default": "youdao"}),
+                "input_text": ("STRING", {
+                    "multiline": True,
+                    "default": ""
+                }),
+                "from_lang": ("STRING", {
+                    "default": "auto"
+                }),
+                "to_lang": ("STRING", {
+                    "default": "en"
+                }),
+                "app_id": ("STRING", {
+                    "default": ""
+                }),
+                "app_key": ("STRING", {
+                    "default": ""
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+
+    FUNCTION = "translate"
+
+    CATEGORY = "SelfNodes/文本"
+
+    def baidu_translate(self, input_text, from_lang, to_lang, app_id, app_key):
+        api_url = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+        
+        salt = str(random.randint(32768, 65536))
+        sign = hashlib.md5((app_id + input_text + salt + app_key).encode()).hexdigest()
+
+        params = {
+            "q": input_text,
+            "from": from_lang,
+            "to": to_lang,
+            "appid": app_id,
+            "salt": salt,
+            "sign": sign
+        }
+        response = requests.get(api_url, params=params)
+        print(response.text)
+        response_json = json.loads(response.text)
+        translation_list = [result["dst"] for result in response_json["trans_result"]]
+        translation = "\n".join(translation_list)
+        return translation
+
+    def youdao_translate(self, input_text, from_lang, to_lang, app_id, app_key):
+        '''
+        添加鉴权相关参数 -
+            appKey : 应用ID
+            salt : 随机值
+            curtime : 当前时间戳(秒)
+            signType : 签名版本
+            sign : 请求签名
+            
+            @param appKey    您的应用ID
+            @param appSecret 您的应用密钥
+            @param paramsMap 请求参数表
+        '''
+        def addAuthParams(appKey, appSecret, params):
+            q = params.get('q')
+            if q is None:
+                q = params.get('img')
+            salt = str(uuid.uuid1())
+            curtime = str(int(time.time()))
+            sign = calculateSign(appKey, appSecret, q, salt, curtime)
+            params['appKey'] = appKey
+            params['salt'] = salt
+            params['curtime'] = curtime
+            params['signType'] = 'v3'
+            params['sign'] = sign
+        
+        '''
+            计算鉴权签名 -
+            计算方式 : sign = sha256(appKey + input(q) + salt + curtime + appSecret)
+            @param appKey    您的应用ID
+            @param appSecret 您的应用密钥
+            @param q         请求内容
+            @param salt      随机值
+            @param curtime   当前时间戳(秒)
+            @return 鉴权签名sign
+        '''
+        def calculateSign(appKey, appSecret, q, salt, curtime):
+            strSrc = appKey + getInput(q) + salt + curtime + appSecret
+            return encrypt(strSrc)
+        
+        
+        def encrypt(strSrc):
+            hash_algorithm = hashlib.sha256()
+            hash_algorithm.update(strSrc.encode('utf-8'))
+            return hash_algorithm.hexdigest()
+        
+        
+        def getInput(input):
+            if input is None:
+                return input
+            inputLen = len(input)
+            return input if inputLen <= 20 else input[0:10] + str(inputLen) + input[inputLen - 10:inputLen]
+
+        vocab_id = ''
+
+        data = {'q': input_text, 'from': from_lang, 'to': to_lang, 'vocabId': vocab_id}
+
+        addAuthParams(app_id, app_key, data)
+
+        def doCall(url, header, params, method):
+            if 'get' == method:
+                return requests.get(url, params)
+            elif 'post' == method:
+                return requests.post(url, params, header)
+
+        header = {'Content-Type': 'application/x-www-form-urlencoded'}
+        res = doCall('https://openapi.youdao.com/api', header, data, 'post')
+        print(str(res.content, 'utf-8'))
+        response_json = json.loads(res.content)
+        translation = response_json['translation'][0]
+        return translation
+
+    def translate(self, service, input_text, from_lang, to_lang, app_id, app_key):
+        if not input_text:
+            return ("",)
+
+        # 需要等待一秒,不然多个节点可能会出现频繁请求被拒绝的情况
+        time.sleep(1)
+
+        if "baidu" == service:
+            translation = self.baidu_translate(input_text, from_lang, to_lang, app_id, app_key)
+        elif "youdao" == service:
+            translation = self.youdao_translate(input_text, from_lang, to_lang, app_id, app_key)
+        print("翻译结果：")
+        print(translation)
+        return (translation,)
+
+
 class SelfNodes_StringToDTGParams(object):
     def __init__(self):
         pass
@@ -819,6 +963,7 @@ NODE_CLASS_MAPPINGS = {
     "随机返回tags": SelfNodes_randomReturnTags,
     "打乱文本": SelfNodes_DisruptText,
     "百度翻译": SelfNodes_BaiduTranslate,
+    "翻译API": SelfNodes_Translate,
     "转成DTG参数": SelfNodes_StringToDTGParams,
     "文件夹加载txt文件": SelfNodes_LoadTextList,
     "快速选择Lora版本": SelfNodes_QuicklySelectLoraVersion,
@@ -842,6 +987,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "随机返回tags": "随机返回tags",
     "打乱文本": "打乱文本",
     "百度翻译": "百度翻译",
+    "翻译API": "翻译API",
     "转成DTG参数": "转成DTG参数",
     "文件夹加载txt文件": "文件夹加载txt文件",
     "快速选择Lora版本": "快速选择Lora版本",

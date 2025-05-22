@@ -14,7 +14,7 @@ import pytorch_lightning as pl
 import clip
 import requests
 import random
-from imgutils.detect import detect_person
+from imgutils.detect import detect_person, detect_halfbody, detect_heads, detect_faces
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""
@@ -700,7 +700,8 @@ class SelfNodes_PersonSplit(object):
         return {
             "required": {
                 "images": ("IMAGE", ),
-                "level": (["n", "s", "m", "x"], {"default": "m"}),
+                "type": (["detect_person", "detect_halfbody", "detect_heads", "detect_faces"], {"default": "detect_person"}),
+                "level": (["n", "s", "m", "x"], {"default": "s"}),
                 "conf_threshold": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0}),
                 "iou_threshold": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0}),
             },
@@ -710,13 +711,20 @@ class SelfNodes_PersonSplit(object):
     FUNCTION = "person_split"
     CATEGORY = "SelfNodes/图片"
 
-    def person_split(self, images, level: str = 'm', conf_threshold: float = 0.3, iou_threshold: float = 0.5, ):
+    def person_split(self, type, images, level: str = 'm', conf_threshold: float = 0.3, iou_threshold: float = 0.5, ):
         result_image = []
         for batch_number, image in enumerate(images):
             i1 = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i1, 0, 255).astype(np.uint8))
 
-            detection = detect_person(img, level, 'v1.1', conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+            if type == 'detect_person':
+                detection = detect_person(img, level, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+            elif type == 'detect_halfbody':
+                detection = detect_halfbody(img, level, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+            elif type == 'detect_heads':
+                detection = detect_heads(img, level, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+            elif type == 'detect_faces':
+                detection = detect_faces(img, level, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
 
             for i, (area, type_, score) in enumerate(detection):
                 result_image.append(pil2tensor(img.crop(area)))

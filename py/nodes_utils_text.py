@@ -891,7 +891,7 @@ class SelfNodes_QuicklySelectLoraVersion(object):
             },
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING", "STRING",)
 
     FUNCTION = "quicklySelectLoraVersion"
 
@@ -899,12 +899,12 @@ class SelfNodes_QuicklySelectLoraVersion(object):
 
     def quicklySelectLoraVersion(self, seed: int, base_path: str, path: str):
         # seed转为字符串
-        ver = str(seed)
+        ver = str(seed).rjust(6, '0')
         if os.path.isdir(base_path):
             # 拼接路径
-            lora_path = os.path.join(base_path, (path + "-" + ver.rjust(6, '0') + ".safetensors"))
-            return (lora_path,)
-        return ("", )
+            lora_path = os.path.join(base_path, (path + "-" + ver + ".safetensors"))
+            return (lora_path, ver,)
+        return ("", "",)
 
 
 class SelfNodes_YamlRandomReturnVal(object):

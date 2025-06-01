@@ -26,3 +26,37 @@ wan_cumshot:
     
     Cum shoots from off screen
     A man enters the frame from the side
+
+lactate-shura-000002.safetensors(i2v), breast_t2v.safetensors(t2v)：
+    Update For T2V
+    I trained T2V using the same dataset as I2V and achieved OK result. The lactation part doesn't work consistently but otherwise acceptable. I didn't do a lot of testing and please feel free to share results and feedback
+    
+    General Guide
+    I have been obsessed with lora training and this is my third model in 3 consecutive days despite my busy working schedule. I'm trying to quickly build out more basic NSFW motion/concept models for the degenerate community, so fellow content creators can pump up interesting work and make me laugh, lol. Training T2V and maybe writing up some lora training guide is on my roadmap, stay tuned.
+    
+    You would want to use prompts like this:
+    
+    One person in the middle of the screen, Her hands cradle the breasts and she milk her breasts by squeezing her breast nipples. loads of jets of milk shoot from her nipples.
+    The keywords are
+    
+    squeeze, massage, nipple, breast, jet of milk, droplet of milk, leak/shoot from nipples
+    As usual my lora works between 0.8 ~ 1 strength. Combining it with my other lora like sexmachine will give good results. I've also tried ahegao lora and it kinda works. Feel free to explore more combinations.
+
+pov_blowjob_v1.1.safetensors(通用): 
+    Version 1.1 update: Attempted a new strategy for training to try to increase the quality as much as possible (without renting something to train on HD video). I think it worked decently, let me know what you think. Check the notes below for details on the training strategy if you're interested.
+    
+    The preview videos were generated with a strength of 1. The motion works if you lower it, but it might start to know less about what a penis is supposed to look like.
+    
+    I included the workflow used to generate the preview videos in the "Training Images" download. I separately ran the videos through film VFI afterward to increase the frame rate.
+    
+    This was trained on 4 different angles, here is how to trigger them:
+    
+    A woman is lying on her stomach between the legs of the viewer and performing oral sex on a man. Her head moves up and down as she sucks the penis.
+    An overhead view of a woman kneeling between the legs of the viewer and performing oral sex on a man. She moves her head back and forth as she sucks the penis.
+    A woman is leaning over a man positioned in between the legs of the viewer and performing oral sex on a man. Her head moves up and down as she sucks the penis.
+    A woman is kneeling in between the legs of the viewer and performing oral sex on a man. Her head moves up and down as she sucks the penis.
+    Training details:
+    
+    I included a lot more HD images this time, 1:1 with the number of videos. I used 25 each. I trained about 1200 steps, and then checked to see if it had learned the motion. It had, but still didn't have a good idea of what a penis was supposed to look like. At this point I continued the training using HD images ONLY. Since it had already learned the motion, I just needed it to learn what things look like in high detail better. I probably didn't even need to train it with videos for 1200 steps, I likely could have stopped even earlier.
+    
+    Anyway, the goal was to do the minimum with videos to teach it the motion, but not overtrain on the low res sources. I think the results ended up a decent amount better doing it this way.

@@ -255,7 +255,7 @@ NODE_CLASS_MAPPINGS = {
     "范围随机整数": randomToFixedLength,
     "限制比例大小": LimitRatioSize,
     "加载lora（可从路径加载）": SelfNodes_LoraLoader,
-    "SDXL比例/空Latent": SelfNodes_SDXLAspectRatio
+    "宽高比例": SelfNodes_SDXLAspectRatio
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -263,5 +263,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "范围随机整数": "范围随机整数",
     "限制比例大小": "限制比例大小",
     "加载lora（可从路径加载）": "加载lora（可从路径加载）",
-    "SDXL比例/空Latent": "SDXL比例/空Latent"
+    "宽高比例": "宽高比例"
 }

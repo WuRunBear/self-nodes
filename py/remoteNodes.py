@@ -3,19 +3,25 @@
 #
 # 用途: 把本机一部分消耗性能的节点搬到另一台 ComfyUI 上执行。
 #
-#   节点1 SelfNodes_RemoteInput  -> 放在【远程 ComfyUI B】的工作流开头
-#       它把 A 注入过来的文本/图片原样"返回"给 B 里的重节点。
-#       文本直接透传; 图片则按 A 上传后的文件名从 B 的 input 目录加载成 tensor。
+#   请求远程ComfyUI (放本地 A):
+#     1. 接受远程工作流 JSON (API 格式): 在 B 的 UI 里搭好后
+#        "导出(API格式)", 把 JSON 内容粘进 workflow 或填文件路径。
+#        工作流本身就是参数表 —— 想改任何参数, 直接改 JSON 里
+#        任意节点的任意输入值。
+#     2. 可选"参数JSON"注入动态值, 格式:
+#            {"节点标题或ID": {"输入名": 值}}
+#        例: {"提示词": {"text": "一只猫"}, "3": {"seed": 123},
+#             "9": {"image": {"$file": "/path/to/local.png"}}}
+#        值为 {"$file": "本地文件路径"} 时自动上传该文件并注入文件名。
+#     3. 提交到远程 /prompt, 轮询 /history, 取回全部输出:
+#        图片(合并为一个 batch) + 文本(换行拼接)。
 #
-#   节点2 SelfNodes_RemoteRequest -> 放在【本地 ComfyUI A】的工作流中
-#       替换掉那部分重节点。它把 A 的输入数据上传/注入到远程工作流 JSON,
-#       提交给 B 的 /prompt, 轮询 /history 等 B 跑完, 再取出图片/文本结果返回。
+#   远程文本输出 (放远程 B, 可选): OUTPUT_NODE 节点, 把文字写进
+#     history 供"请求远程ComfyUI"取回; 图片结果用标准 SaveImage 即可。
 #
-# 远程工作流模板: 在 B 的 UI 里自己搭好(开头放 RemoteInput 节点, 结尾放
-# SaveImage / 文本输出节点), 然后用 ComfyUI 的 "导出(API格式)" 保存为 json。
-# 把该 json 的路径(或内容)填给 RemoteRequest 节点的 workflow_path/workflow。
-#
-# 只有图片和文字跨机器传输; 模型/CLIP 权重无法序列化, 必须由 B 自己加载。
+# 远程 B 只需标准 ComfyUI (要取回文字结果时才需装本扩展)。
+# 模型/CLIP 权重无法序列化, 必须由 B 自己加载; 跨机器传输的只有
+# 图片文件与文本。
 # ------------------------------------------------------------------------#
 
 import json
@@ -28,41 +34,10 @@ import torch
 from PIL import Image
 from io import BytesIO
 
-try:
-    import folder_paths
-except Exception:
-    folder_paths = None
-
-
-class AnyType(str):
-    """A special type that can be connected to any other types."""
-
-    def __ne__(self, __value: object) -> bool:
-        return False
-
-
-any_type = AnyType("*")
-
-# 无有效图片时的占位(1x1 黑图), 避免下游节点收到空 tensor 而崩溃
-_BLANK_IMAGE = None
-
 
 def _blank_image():
-    global _BLANK_IMAGE
-    if _BLANK_IMAGE is None:
-        _BLANK_IMAGE = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
-    return _BLANK_IMAGE
-
-
-def _tensor_to_pil(image):
-    """IMAGE tensor (N,H,W,C float 0-1) -> PIL.Image (取第一帧)."""
-    if image is None:
-        return None
-    i = 255.0 * image.cpu().numpy()
-    i = np.clip(i, 0, 255).astype(np.uint8)
-    if i.ndim == 4:
-        i = i[0]
-    return Image.fromarray(i)
+    """无结果时的占位(1x1 黑图), 避免下游节点收到空 tensor 而崩溃."""
+    return torch.zeros((1, 64, 64, 3), dtype=torch.float32)
 
 
 def _pil_to_tensor(pil):
@@ -80,37 +55,20 @@ def _norm_url(url):
     return url.rstrip("/")
 
 
-def _load_local_image(image_name):
-    """从本机(input 目录)按文件名加载图片 -> IMAGE tensor."""
-    if not image_name:
-        return _blank_image()
-    if folder_paths is None:
-        return _blank_image()
-    path = os.path.join(folder_paths.get_input_directory(), image_name)
-    if not os.path.exists(path):
-        print(f"[selfNodes][远程] 找不到图片: {path}")
-        return _blank_image()
-    try:
-        rgb = Image.open(path).convert("RGB")
-        return _pil_to_tensor(rgb)
-    except Exception as e:
-        print(f"[selfNodes][远程] 读取图片失败 {image_name}: {e}")
-        return _blank_image()
-
-
-def _upload_image(url, pil, name):
-    """把 PIL 图片以 multipart 字段 image 上传到远程, 返回 {'name','subfolder','type'}."""
-    buffer = BytesIO()
-    pil.save(buffer, format="PNG")
-    buffer.seek(0)
-    resp = requests.post(
-        f"{url}/upload/image",
-        files={"image": (name, buffer, "image/png")},
-        data={"overwrite": "true"},
-        timeout=30,
-    )
+def _upload_file(url, path):
+    """上传本地文件到远程, 返回远程保存的文件名."""
+    if not os.path.isfile(path):
+        raise ValueError(f"文件不存在: {path}")
+    name = os.path.basename(path)
+    with open(path, "rb") as f:
+        resp = requests.post(
+            f"{url}/upload/image",
+            files={"image": (name, f)},
+            data={"overwrite": "true"},
+            timeout=60,
+        )
     resp.raise_for_status()
-    return resp.json()
+    return resp.json()["name"]
 
 
 def _submit_prompt(url, prompt_obj, client_id="selfnodes"):
@@ -123,9 +81,7 @@ def _submit_prompt(url, prompt_obj, client_id="selfnodes"):
         timeout=30,
     )
     if resp.status_code != 200:
-        raise RuntimeError(
-            f"远程 /prompt 返回 {resp.status_code}: {resp.text[:500]}"
-        )
+        raise RuntimeError(f"远程 /prompt 返回 {resp.status_code}: {resp.text[:500]}")
     resp_json = resp.json()
     prompt_id = resp_json.get("prompt_id")
     if not prompt_id:
@@ -158,7 +114,6 @@ def _poll_history(url, prompt_id, timeout=600, interval=1.0):
             if status_str == "success":
                 return entry
 
-            # status 存在但既非 success 也非 error (可能是中间态) -> 继续等
             print(f"[selfNodes][远程] 执行中... status={status}")
         time.sleep(interval)
 
@@ -174,60 +129,60 @@ def _download_image(url, filename, subfolder="", ftype="output"):
     return _pil_to_tensor(pil)
 
 
-def _lookup_remote_input_node(prompt_obj, title):
-    """按 _meta.title 或 class_type 找到远程输入节点, 返回 (node_id, node)."""
-    found = []
-    for node_id, node in prompt_obj.items():
-        meta_title = (node.get("_meta") or {}).get("title")
-        if meta_title == title or node.get("class_type") == "SelfNodes_RemoteInput":
-            found.append((node_id, node))
-    return found
+def _resolve_targets(prompt_obj, key):
+    """参数JSON 的键 -> 目标节点列表. 先按 _meta.title 匹配, 再按节点ID."""
+    by_title = []
+    for nid, node in prompt_obj.items():
+        if not isinstance(node, dict):
+            continue
+        if (node.get("_meta") or {}).get("title") == key:
+            by_title.append((nid, node))
+    if by_title:
+        return by_title
+
+    node = prompt_obj.get(key)
+    if isinstance(node, dict):
+        return [(key, node)]
+    return None
 
 
-def _inject_strings(prompt_obj, title, text_1, text_2):
-    """把文本注入到远程输入节点的 text_1 / text_2."""
-    for node_id, node in _lookup_remote_input_node(prompt_obj, title):
-        node.setdefault("inputs", {})["text_1"] = text_1
-        node.setdefault("inputs", {})["text_2"] = text_2
-        print(f"[selfNodes][远程] 注入文本 -> 节点 {node_id}")
+def _apply_params(url, prompt_obj, params):
+    """把参数JSON 注入到工作流的任意节点任意输入.
 
+    格式: {"节点标题或ID": {"输入名": 值}}
+    值为 {"$file": "本地路径"} 时上传该文件并注入远程文件名.
+    """
+    if not isinstance(params, dict):
+        raise ValueError("参数JSON 必须是对象, 如 {\"节点标题或ID\": {\"输入名\": 值}}")
 
-def _inject_images(prompt_obj, title, url, image_1, image_2):
-    """上传 IMAGE 到远程并注入对应文件名."""
-    for node_id, node in _lookup_remote_input_node(prompt_obj, title):
-        node.setdefault("inputs", {})
-        if image_1 is not None:
-            pil = _tensor_to_pil(image_1)
-            info = _upload_image(url, pil, "remote_input_1.png")
-            node["inputs"]["image_1"] = info["name"]
-            sub = info.get("subfolder", "")
-            print(f"[selfNodes][远程] 上传图片1 -> {info['name']} (subfolder={sub})")
-        if image_2 is not None:
-            pil = _tensor_to_pil(image_2)
-            info = _upload_image(url, pil, "remote_input_2.png")
-            node["inputs"]["image_2"] = info["name"]
-            print(f"[selfNodes][远程] 上传图片2 -> {info['name']}")
+    for key, patch in params.items():
+        targets = _resolve_targets(prompt_obj, key)
+        if not targets:
+            titles = [
+                (node.get("_meta") or {}).get("title") or nid
+                for nid, node in prompt_obj.items()
+                if isinstance(node, dict)
+            ]
+            raise ValueError(f"参数JSON: 找不到节点 '{key}' (可用标题/ID: {titles})")
+        if not isinstance(patch, dict):
+            raise ValueError(f"参数JSON: 节点 '{key}' 的值必须是对象 {{\"输入名\": 值}}")
 
-
-def _inject_seed(prompt_obj, seed):
-    """把 seed 覆盖到远程工作流里所有含 seed 的节点(未连接的端)."""
-    if seed is None or seed < 0:
-        return
-    injected = 0
-    for node_id, node in prompt_obj.items():
-        inputs = node.get("inputs") or {}
-        if "seed" in inputs and not isinstance(inputs["seed"], list):
-            inputs["seed"] = seed
-            injected += 1
-    if injected:
-        print(f"[selfNodes][远程] 覆盖 {injected} 个节点的 seed = {seed}")
+        for nid, node in targets:
+            inputs = node.setdefault("inputs", {})
+            for name, value in patch.items():
+                if name not in inputs:
+                    print(f"[selfNodes][远程] 警告: 节点 '{key}'({nid}) 没有输入 '{name}', 仍将写入")
+                if isinstance(value, dict) and "$file" in value:
+                    value = _upload_file(url, value["$file"])
+                inputs[name] = value
+            print(f"[selfNodes][远程] 已注入参数 -> 节点 {nid} ({key}): {list(patch)}")
 
 
 def _collect_results(entry, url):
-    """从 history 条目提取图片与文本结果.
+    """从 history 条目提取全部图片与文本.
 
-    返回 (images:list[tensor], texts:list[str]).
-    图片跳过 temp 预览, 只取 output 类型.
+    图片跳过 temp 预览; 文本兼容 text/string/value 键(值为数组).
+    返回 (images: list[tensor], texts: list[str]).
     """
     images = []
     texts = []
@@ -237,68 +192,37 @@ def _collect_results(entry, url):
             continue
 
         for img in out.get("images", []) or []:
-            ftype = img.get("type")
-            if ftype == "temp":
+            if img.get("type") == "temp":
                 continue
             try:
-                tensor = _download_image(
-                    url,
-                    img["filename"],
-                    img.get("subfolder", ""),
-                    ftype or "output",
+                images.append(
+                    _download_image(
+                        url,
+                        img["filename"],
+                        img.get("subfolder", ""),
+                        img.get("type") or "output",
+                    )
                 )
-                images.append(tensor)
             except Exception as e:
                 print(f"[selfNodes][远程] 下载图片失败: {e}")
 
         for key in ("text", "string", "value"):
-            if key in out:
-                val = out[key]
-                if isinstance(val, list):
-                    for item in val:
-                        if item is not None:
-                            texts.append(str(item))
-                elif val is not None:
-                    texts.append(str(val))
+            if key not in out:
+                continue
+            val = out[key]
+            if isinstance(val, list):
+                texts.extend(str(item) for item in val if item is not None)
+            elif val is not None:
+                texts.append(str(val))
     return images, texts
 
 
 # ------------------------------------------------------------------------#
-class SelfNodes_RemoteInput:
-    """远程输入(放在 ComfyUI B 工作流开头).
-
-    接收 A 注入过来的文本与图片文件名, 原样返回给 B 内的后续节点.
-    图片按文件名从 B 的 input 目录加载.
-    """
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "text_1": ("STRING", {"multiline": True, "default": ""}),
-                "text_2": ("STRING", {"multiline": True, "default": ""}),
-                "image_1": ("STRING", {"default": "", "tooltip": "A 上传到本机的图片文件名"}),
-                "image_2": ("STRING", {"default": "", "tooltip": "A 上传到本机的图片文件名"}),
-            },
-        }
-
-    RETURN_TYPES = ("STRING", "STRING", "IMAGE", "IMAGE")
-    RETURN_NAMES = ("文本1", "文本2", "图片1", "图片2")
-    FUNCTION = "output"
-    CATEGORY = "SelfNodes/远程"
-
-    def output(self, text_1, text_2, image_1, image_2):
-        img_1 = _load_local_image(image_1)
-        img_2 = _load_local_image(image_2)
-        return (text_1, text_2, img_1, img_2)
-
-
-# ------------------------------------------------------------------------#
 class SelfNodes_RemoteRequest:
-    """请求远程 ComfyUI(放在本地 ComfyUI A 的工作流中).
+    """请求远程 ComfyUI (放本地 A 的工作流中).
 
-    上传本机图片 -> 把文本/图片注入远程工作流 JSON -> 提交 /prompt ->
-    轮询 /history -> 取回远程输出的图片和文本结果返回给本机后续节点.
+    接受远程工作流 JSON + 可选参数JSON (注入任意节点的任意输入),
+    提交远程执行并取回图片/文本结果.
     """
 
     @classmethod
@@ -306,38 +230,29 @@ class SelfNodes_RemoteRequest:
         return {
             "required": {
                 "remote_url": ("STRING", {"default": "http://127.0.0.1:8188"}),
-                "workflow_path": ("STRING", {"default": "", "tooltip": "远程工作流(API格式 json)的文件路径"}),
-                "remote_input_title": ("STRING", {"default": "远程输入", "tooltip": "远程工作流里 RemoteInput 节点的标题"}),
-                "text_1": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
-                "text_2": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
-                "image_1": ("IMAGE",),
-                "image_2": ("IMAGE",),
-                "seed": ("INT", {"default": -1, "min": -1, "max": 0x7FFFFFFF, "tooltip": ">=0 覆盖远程含 seed 的节点; -1 保持模板不变"}),
+                "workflow": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "tooltip": "远程工作流 JSON (API格式), 参数直接改在这里",
+                }),
+                "params_json": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "tooltip": '可选: {"节点标题或ID": {"输入名": 值}}; 值支持 {"$file": "本地文件路径"}',
+                }),
                 "timeout": ("INT", {"default": 600, "min": 30, "max": 86400}),
             },
             "optional": {
-                "workflow": ("STRING", {"multiline": True, "default": "", "tooltip": "远程工作流 JSON 内容(与 workflow_path 二选一)"}),
+                "workflow_path": ("STRING", {"default": "", "tooltip": "从文件读取工作流 JSON (workflow 为空时生效)"}),
             },
         }
 
-    RETURN_TYPES = ("IMAGE", "IMAGE", "STRING", "STRING")
-    RETURN_NAMES = ("图片1", "图片2", "文本1", "文本2")
+    RETURN_TYPES = ("IMAGE", "STRING")
+    RETURN_NAMES = ("图片", "文本")
     FUNCTION = "request"
     CATEGORY = "SelfNodes/远程"
 
-    def request(
-        self,
-        remote_url,
-        workflow_path,
-        remote_input_title,
-        text_1,
-        text_2,
-        image_1,
-        image_2,
-        seed,
-        timeout,
-        workflow="",
-    ):
+    def request(self, remote_url, workflow, params_json, timeout, workflow_path=""):
         url = _norm_url(remote_url)
 
         # 1. 载入远程工作流(API 格式)
@@ -346,13 +261,22 @@ class SelfNodes_RemoteRequest:
             with open(workflow_path, "r", encoding="utf-8") as f:
                 wf_text = f.read()
         if not wf_text:
-            raise ValueError("请提供 workflow(JSON 内容)或 workflow_path(API 格式 json 文件路径)")
-        prompt_obj = json.loads(wf_text)
+            raise ValueError("请提供 workflow (JSON 内容) 或 workflow_path (API 格式 json 文件路径)")
+        try:
+            prompt_obj = json.loads(wf_text)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"工作流 JSON 解析失败: {e}")
 
-        # 2. 注入文本与图片
-        _inject_strings(prompt_obj, remote_input_title, text_1, text_2)
-        _inject_images(prompt_obj, remote_input_title, url, image_1, image_2)
-        _inject_seed(prompt_obj, seed)
+        if isinstance(prompt_obj, dict) and "nodes" in prompt_obj and "links" in prompt_obj:
+            raise ValueError("这是 UI 格式工作流, 请在远程 ComfyUI 使用 导出(API格式) 后重新提供")
+
+        # 2. 注入参数 (可选)
+        if params_json.strip():
+            try:
+                params = json.loads(params_json)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"参数JSON 解析失败: {e}")
+            _apply_params(url, prompt_obj, params)
 
         # 3. 提交执行
         prompt_id = _submit_prompt(url, prompt_obj)
@@ -364,22 +288,52 @@ class SelfNodes_RemoteRequest:
         # 5. 取回图片与文本结果
         images, texts = _collect_results(entry, url)
 
-        img_1 = images[0] if len(images) > 0 else _blank_image()
-        img_2 = images[1] if len(images) > 1 else _blank_image()
-        t_1 = texts[0] if len(texts) > 0 else ""
-        t_2 = texts[1] if len(texts) > 1 else ""
-        return (img_1, img_2, t_1, t_2)
+        if images:
+            try:
+                image_out = torch.cat(images, dim=0)
+            except Exception as e:
+                print(f"[selfNodes][远程] 图片尺寸不一致无法合并({e}), 只返回第一张")
+                image_out = images[0]
+        else:
+            image_out = _blank_image()
+
+        return (image_out, "\n".join(texts))
+
+
+# ------------------------------------------------------------------------#
+class SelfNodes_RemoteTextOutput:
+    """远程文本输出 (放远程 B 的工作流末尾, 可选).
+
+    OUTPUT_NODE: 把文字写进 history, 供"请求远程ComfyUI"取回.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"multiline": True, "default": "", "forceInput": True}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("文本",)
+    FUNCTION = "output"
+    OUTPUT_NODE = True
+    CATEGORY = "SelfNodes/远程"
+
+    def output(self, text):
+        return {"ui": {"text": [text]}, "result": (text,)}
 
 
 # ------------------------------------------------------------------------#
 # MAPPINGS
 # ------------------------------------------------------------------------#
 NODE_CLASS_MAPPINGS = {
-    "SelfNodes Remote Input": SelfNodes_RemoteInput,
     "SelfNodes Remote Request": SelfNodes_RemoteRequest,
+    "SelfNodes Remote Text Output": SelfNodes_RemoteTextOutput,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SelfNodes Remote Input": "远程输入",
     "SelfNodes Remote Request": "请求远程ComfyUI",
+    "SelfNodes Remote Text Output": "远程文本输出",
 }

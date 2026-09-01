@@ -277,7 +277,7 @@ class SelfNodes_ToJSON:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
+            "optional": {
                 "key_1": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
                 "value_1": (any_type,),
                 "key_2": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
@@ -328,20 +328,20 @@ class SelfNodes_RemoteRequest:
         return {
             "required": {
                 "remote_url": ("STRING", {"default": "http://127.0.0.1:8188"}),
+                "timeout": ("INT", {"default": 600, "min": 30, "max": 86400}),
+            },
+            "optional": {
                 "workflow": ("STRING", {
                     "multiline": True,
                     "default": "",
                     "tooltip": "远程工作流 JSON (API格式), 参数直接改在这里",
                 }),
+                "workflow_path": ("STRING", {"default": "", "tooltip": "从文件读取工作流 JSON (workflow 为空时生效)"}),
                 "params_json": ("STRING", {
                     "multiline": True,
                     "default": "",
                     "tooltip": '可选, 两种格式: {"节点标题或ID": {"输入名": 值}} 或 {"节点标题或ID.输入名": 值}; 值支持 {"$file": "本地文件路径"}',
                 }),
-                "timeout": ("INT", {"default": 600, "min": 30, "max": 86400}),
-            },
-            "optional": {
-                "workflow_path": ("STRING", {"default": "", "tooltip": "从文件读取工作流 JSON (workflow 为空时生效)"}),
             },
         }
 

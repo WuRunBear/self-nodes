@@ -149,33 +149,43 @@ def _resolve_targets(prompt_obj, key):
 def _apply_params(url, prompt_obj, params):
     """把参数JSON 注入到工作流的任意节点任意输入.
 
-    格式: {"节点标题或ID": {"输入名": 值}}
+    两种格式:
+      嵌套: {"节点标题或ID": {"输入名": 值}}
+      扁平: {"节点标题或ID.输入名": 值}
     值为 {"$file": "本地路径"} 时上传该文件并注入远程文件名.
     """
     if not isinstance(params, dict):
         raise ValueError("参数JSON 必须是对象, 如 {\"节点标题或ID\": {\"输入名\": 值}}")
 
-    for key, patch in params.items():
-        targets = _resolve_targets(prompt_obj, key)
+    for key, piece in params.items():
+        if isinstance(piece, dict):
+            node_key, patch = key, piece
+        else:
+            if "." not in key:
+                raise ValueError(
+                    f"参数JSON: '{key}' 的值不是对象, 键也非 '节点.输入名' 扁平格式"
+                )
+            node_key, input_name = key.rsplit(".", 1)
+            patch = {input_name: piece}
+
+        targets = _resolve_targets(prompt_obj, node_key)
         if not targets:
             titles = [
                 (node.get("_meta") or {}).get("title") or nid
                 for nid, node in prompt_obj.items()
                 if isinstance(node, dict)
             ]
-            raise ValueError(f"参数JSON: 找不到节点 '{key}' (可用标题/ID: {titles})")
-        if not isinstance(patch, dict):
-            raise ValueError(f"参数JSON: 节点 '{key}' 的值必须是对象 {{\"输入名\": 值}}")
+            raise ValueError(f"参数JSON: 找不到节点 '{node_key}' (可用标题/ID: {titles})")
 
         for nid, node in targets:
             inputs = node.setdefault("inputs", {})
             for name, value in patch.items():
                 if name not in inputs:
-                    print(f"[selfNodes][远程] 警告: 节点 '{key}'({nid}) 没有输入 '{name}', 仍将写入")
+                    print(f"[selfNodes][远程] 警告: 节点 '{node_key}'({nid}) 没有输入 '{name}', 仍将写入")
                 if isinstance(value, dict) and "$file" in value:
                     value = _upload_file(url, value["$file"])
                 inputs[name] = value
-            print(f"[selfNodes][远程] 已注入参数 -> 节点 {nid} ({key}): {list(patch)}")
+            print(f"[selfNodes][远程] 已注入参数 -> 节点 {nid} ({node_key}): {list(patch)}")
 
 
 def _collect_results(entry, url):
@@ -217,6 +227,84 @@ def _collect_results(entry, url):
     return images, texts
 
 
+def _to_jsonable(value):
+    """把任意输入值转成可 JSON 序列化的值.
+
+    - dict/list/数字/布尔: 原样保留
+    - 数字字符串(\"123\") / 布尔字符串(\"true\") / JSON字符串(\"{...}\"): 自动解析
+    - 其他: 保持字符串
+    """
+    if isinstance(value, dict) or isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        s = value.strip()
+        if s in ("true", "false", "null"):
+            return {"true": True, "false": False, "null": None}[s]
+        try:
+            return int(s)
+        except ValueError:
+            pass
+        try:
+            return float(s)
+        except ValueError:
+            pass
+        try:
+            return json.loads(s)
+        except json.JSONDecodeError:
+            return value
+    return str(value)
+
+
+# ------------------------------------------------------------------------#
+class SelfNodes_ToJSON:
+    """把键值对拼成 JSON 字符串(供 请求远程ComfyUI 的 params_json 用).
+
+    支持任意数量的键值对, 值可接任意类型节点(文本/数字节点等).
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "key_1": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_1": (any_type,),
+                "key_2": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_2": (any_type,),
+                "key_3": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_3": (any_type,),
+                "key_4": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_4": (any_type,),
+                "key_5": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_5": (any_type,),
+                "key_6": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_6": (any_type,),
+                "key_7": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_7": (any_type,),
+                "key_8": ("STRING", {"default": "", "tooltip": "JSON 键, 如 3.seed 或 提示词.text"}),
+                "value_8": (any_type,),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("JSON",)
+    FUNCTION = "to_json"
+    CATEGORY = "SelfNodes/远程"
+
+    def to_json(self, **kwargs):
+        obj = {}
+        for i in range(1, 9):
+            key = kwargs.get(f"key_{i}", "")
+            value = kwargs.get(f"value_{i}")
+            if not key:
+                continue
+            if value is None:
+                continue
+            obj[key.strip()] = _to_jsonable(value)
+        return (json.dumps(obj, ensure_ascii=False),)
+
+
 # ------------------------------------------------------------------------#
 class SelfNodes_RemoteRequest:
     """请求远程 ComfyUI (放本地 A 的工作流中).
@@ -238,7 +326,7 @@ class SelfNodes_RemoteRequest:
                 "params_json": ("STRING", {
                     "multiline": True,
                     "default": "",
-                    "tooltip": '可选: {"节点标题或ID": {"输入名": 值}}; 值支持 {"$file": "本地文件路径"}',
+                    "tooltip": '可选, 两种格式: {"节点标题或ID": {"输入名": 值}} 或 {"节点标题或ID.输入名": 值}; 值支持 {"$file": "本地文件路径"}',
                 }),
                 "timeout": ("INT", {"default": 600, "min": 30, "max": 86400}),
             },
@@ -329,11 +417,13 @@ class SelfNodes_RemoteTextOutput:
 # MAPPINGS
 # ------------------------------------------------------------------------#
 NODE_CLASS_MAPPINGS = {
+    "SelfNodes To JSON": SelfNodes_ToJSON,
     "SelfNodes Remote Request": SelfNodes_RemoteRequest,
     "SelfNodes Remote Text Output": SelfNodes_RemoteTextOutput,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SelfNodes To JSON": "转JSON",
     "SelfNodes Remote Request": "请求远程ComfyUI",
     "SelfNodes Remote Text Output": "远程文本输出",
 }

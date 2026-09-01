@@ -35,6 +35,16 @@ from PIL import Image
 from io import BytesIO
 
 
+class AnyType(str):
+    """万能连接类型: 可与任意类型的输出连接 (ComfyUI any_type 惯例)."""
+
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+
+any_type = AnyType("*")
+
+
 def _blank_image():
     """无结果时的占位(1x1 黑图), 避免下游节点收到空 tensor 而崩溃."""
     return torch.zeros((1, 64, 64, 3), dtype=torch.float32)

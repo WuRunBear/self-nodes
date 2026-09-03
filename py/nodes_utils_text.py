@@ -361,6 +361,26 @@ class SelfNodes_TextLength:
 
         return (int_out, )
 #---------------------------------------------------------------------------------------------------------------------#
+class SelfNodes_IsEmptyString:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+
+        return {
+            "required": {
+                "text": ("STRING", {"multiline": True, "default": ""}),
+            },
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("is_empty", )
+    FUNCTION = "is_empty_string"
+    CATEGORY = "SelfNodes/文本"
+
+    def is_empty_string(self, text):
+
+        return (text.strip() == "", )
+#---------------------------------------------------------------------------------------------------------------------#
 class SelfNodes_SplitTagsInsertText:
 
     @ classmethod
@@ -955,6 +975,7 @@ NODE_CLASS_MAPPINGS = {
     "SelfNodes Text Replace": SelfNodes_TextReplace,
     "SelfNodes Text Blacklist": SelfNodes_TextBlacklist,
     "SelfNodes Text Length": SelfNodes_TextLength,
+    "SelfNodes Text Is Empty": SelfNodes_IsEmptyString,
     "SelfNodes Text Operation": SelfNodes_TextOperation,
     "SelfNodes Save Text To File": SelfNodes_SaveTextToFile,
     "SelfNodes Split Tags Insert Text": SelfNodes_SplitTagsInsertText,
@@ -979,6 +1000,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SelfNodes Text Replace": "文本替换",
     "SelfNodes Text Blacklist": "文本黑名单",
     "SelfNodes Text Length": "文本长度",
+    "SelfNodes Text Is Empty": "判断是否空字符串",
     "SelfNodes Text Operation": "文本操作",
     "SelfNodes Save Text To File": "将文本保存到文件",
     "SelfNodes Split Tags Insert Text": "分割标签并插入文本",

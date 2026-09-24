@@ -11,7 +11,6 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 import pytorch_lightning as pl
-import clip
 import requests
 import random
 from .anime_detect import detect_person, detect_halfbody, detect_heads, detect_faces
@@ -412,6 +411,7 @@ class ImageScorer:
             self.model.to(device)
             self.model.eval()
         if self.model2 is None:
+            import clip
             self.model2, self.preprocess = clip.load("ViT-L/14", device=device)  # RN50x64
         tensor_image = image[0]
         img = (tensor_image * 255).to(torch.uint8).numpy()

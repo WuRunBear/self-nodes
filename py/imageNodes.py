@@ -14,7 +14,7 @@ import pytorch_lightning as pl
 import clip
 import requests
 import random
-from imgutils.detect import detect_person, detect_halfbody, detect_heads, detect_faces
+from .anime_detect import detect_person, detect_halfbody, detect_heads, detect_faces
 
 class AnyType(str):
     """A special type that can be connected to any other types. SelfNodesedit to pythongosssss"""

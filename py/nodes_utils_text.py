@@ -322,9 +322,9 @@ class SelfNodes_TextOperation:
             for tag in tags:
                 if not re.compile(r'.*:\d+\)').search(tag): 
                     if not re.compile(r'\\\(').search(tag):
-                        tag = tag.replace("(", "\(")
+                        tag = tag.replace("(", "\\(")
                     if not re.compile(r'\\\)').search(tag):
-                        tag = tag.replace(")", "\)")
+                        tag = tag.replace(")", "\\)")
                     tag = re.sub(r'\s{2,}', ' ', tag)
                     tag = tag.strip()
                 tags_out.append(tag)

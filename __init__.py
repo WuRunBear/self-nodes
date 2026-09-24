@@ -19,6 +19,8 @@ if init():
             continue
         name = os.path.splitext(file)[0]
         imported_module = importlib.import_module(".py.{}".format(name), __name__)
+        if not hasattr(imported_module, "NODE_CLASS_MAPPINGS"):
+            continue  # 辅助库模块, 非节点
         NODE_CLASS_MAPPINGS = {**NODE_CLASS_MAPPINGS, **imported_module.NODE_CLASS_MAPPINGS}
         NODE_DISPLAY_NAME_MAPPINGS = {**NODE_DISPLAY_NAME_MAPPINGS, **imported_module.NODE_DISPLAY_NAME_MAPPINGS}
 
